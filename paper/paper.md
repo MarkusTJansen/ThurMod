@@ -13,7 +13,7 @@ affiliations:
  - name: University of Wuppertal
    index: 1
 date: 20 March 2023
-bibliography: paper.bib
+bibliography: paper/paper.bib
 
 ---
 
