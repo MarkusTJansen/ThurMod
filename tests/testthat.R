@@ -1,4 +1,4 @@
 library(testthat)
-library(Thurmod)
+library(ThurMod)
 
-test_check("Thurmod")
+test_check("ThurMod")
