@@ -1,5 +1,5 @@
 ---
-title: 'Thurmod: An R package for Thurstonian Forced-Choice Modeling'
+title: 'ThurMod: An R package for Thurstonian Forced-Choice Modeling'
 tags:
   - R
   - Forced-Choice
@@ -26,9 +26,9 @@ Currently, there are ongoing discussions about the usability of these models, an
 
 # Statement of need
 
-The R package *Thurmod* has been developed to fit all currently known Thurstonian forced-choice models (SEM and IRT models) and designs (full and various block designs). Especially the large amount of parameter constraints needed  makes syntax creation for analysis by hand cumbersome and error-prone. The previously published R package *thurstonianIRT* [@burkner2019] is limited, as it only focuses on the IRT model combined with an unlinked block design. For more details see previous citations (as well as [@brown2011; @jansen2023a; @jansen2023b; @jansen2023c], in the latter two, the software was used. The model estimation can be done with lavaan [@rosseel2012] as backend. Furthermore *Thurmod* includes helpful functions, for example, the linking of blocks, correcting fit statistics, determination of degrees of freedom and the rank of the design matrix. All these functionalities should make dealing with Thurstonian forced-choice data time efficient and reduce the probability of errors in analysis. As Thurstonian forced-choice modeling is an active field of research, further developments and functionalities will be added in the future.
+The R package *ThurMod* has been developed to fit all currently known Thurstonian forced-choice models (SEM and IRT models) and designs (full and various block designs). Especially the large amount of parameter constraints needed  makes syntax creation for analysis by hand cumbersome and error-prone. The previously published R package *thurstonianIRT* [@burkner2019] is limited, as it only focuses on the IRT model combined with an unlinked block design. For more details see previous citations (as well as [@brown2011; @jansen2023a; @jansen2023b; @jansen2023c], in the latter two, the software was used. The model estimation can be done with lavaan [@rosseel2012] as backend. Furthermore *ThurMod* includes helpful functions, for example, the linking of blocks, correcting fit statistics, determination of degrees of freedom and the rank of the design matrix. All these functionalities should make dealing with Thurstonian forced-choice data time efficient and reduce the probability of errors in analysis. As Thurstonian forced-choice modeling is an active field of research, further developments and functionalities will be added in the future.
 
-The source code of the package is available on GitHub (https://github.com/MarkusTJansen/Thurmod).
+The source code of the package is available on GitHub (https://github.com/MarkusTJansen/ThurMod).
 
 # References
 
