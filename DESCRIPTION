@@ -1,0 +1,22 @@
+Package: ThurMod
+Type: Package
+Title: Thurstonian CFA and Thurstonian IRT modelling
+Version: 1.1.1
+Date: 2023-09-02
+Authors@R: person("Markus Thomas", "Jansen", email="mjansen@uni-wuppertal.de", role=c('aut','cre'), comment = c(ORCID = "0000-0002-5162-4409"))
+Description: Fit Thurstonian forced-choice models (CFA (simple and factor) and IRT) in R. This package allows for the analysis of item response modeling (IRT) as well as confirmatory factor analysis (CFA) in the Thurstonian framework. Currently, estimation can be performed by Mplus and lavaan. References:
+  Brown, A, & Maydeu-Olivares, A. (2011). Item response modeling of forced-choice questionnaires.Educational and Psychological Measurement, 71(3), 460-502. https://doi.org/10.1177/0013164410375112;
+  Jansen, M. T., & Schulze, R. (2023). The Thurstonian linked block design: Improving Thurstonian modeling for paired comparison and ranking data. Manuscript submitted;
+  Maydeu-Olivares, A., & Böckenholt, U. (2005). Structural equation modeling of paired-comparison and ranking data. Psychological Methods, 10(3), 285-304. https://doi.org/10.1037/1082-989X.10.3.285.
+VignetteBuilder: knitr
+License: GPL (>= 3)
+Depends: R (>= 3.5.0)
+Imports: stats, utils, mvtnorm, MASS, matrixStats, lavaan
+Suggests: rmarkdown, knitr
+URL: https://github.com/MarkusTJansen/ThurMod
+BugReports: https://github.com/MarkusTJansen/ThurMod/issues
+Encoding: UTF-8
+NeedsCompilation: no
+Roxygen: list(old_usage = TRUE)
+RoxygenNote: 7.2.3
+LazyData: true
