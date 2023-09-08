@@ -35,9 +35,9 @@
 #' redundancies(blocks)
 #' 
 #' @references 
-#' Jansen, M. T., & Schulze, R. (2023). \emph{The Thurstonian linked block design: Improving Thurstonian modeling for paired comparison and ranking data}. Manuscript submitted.
+#' Jansen, M. T., & Schulze, R. (in review). \emph{The Thurstonian linked block design: Improving Thurstonian modeling for paired comparison and ranking data}.
 #' 
-#' Maydeu-Olivares, A. (1999). Thurstonian modeling of ranking data via mean and covariance structure analysis. \emph{Psychometrika}, \emph{64}(3), 325-340. \url{https://doi.org/10.1007/BF02294299}
+#' Maydeu-Olivares, A. (1999). Thurstonian modeling of ranking data via mean and covariance structure analysis. \emph{Psychometrika}, \emph{64}(3), 325-340. \doi{10.1007/BF02294299}
 #' 
 #' @export
 

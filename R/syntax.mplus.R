@@ -71,14 +71,14 @@
 #' #input_path = 'myFC_model')
 #' 
 #' @references 
-#' Maydeu-Olivares, A., & Brown, A. (2010). Item response modeling of paired comparison and ranking data. \emph{Multivariate Behavioural Research}, \emph{45}(6), 935-974. \url{https://doi.org/10.1080/00273171.2010.531231}
-#'  
-#' Jansen, M. T., & Schulze, R. (2023a). \emph{Linear factor analytic Thurstonian forced-choice models: Current status and issues}. Manuscript submitted.
-#' 
-#' Jansen, M. T., & Schulze, R. (2023b). \emph{The Thurstonian linked block design: Improving Thurstonian modeling for paired comparison and ranking data}. Manuscript submitted.
-#' 
-#' Maydeu-Olivares, A., & Böckenholt, U. (2005). Structural equation modeling of paired-comparison and ranking data. \emph{Psychological Methods}, \emph{10}(3), 285-304. \url{https://doi.org/10.1037/1082-989X.10.3.285}
+#' Maydeu-Olivares, A., & Böckenholt, U. (2005). Structural equation modeling of paired-comparison and ranking data. \emph{Psychological Methods}, \emph{10}(3), 285-304. \doi{10.1037/1082-989X.10.3.285}
 #'
+#' Maydeu-Olivares, A., & Brown, A. (2010). Item response modeling of paired comparison and ranking data. \emph{Multivariate Behavioural Research}, \emph{45}(6), 935-974. \doi{10.1080/00273171.2010.531231}
+#'  
+#' Jansen, M. T., & Schulze, R. (2023a). \emph{Linear factor analytic Thurstonian forced-choice models: Current status and issues}. Educational and Psychological Measurement.
+#' 
+#' Jansen, M. T., & Schulze, R. (2023b, in review). \emph{The Thurstonian linked block design: Improving Thurstonian modeling for paired comparison and ranking data}. 
+#' 
 #' @export
 
 syntax.mplus <- function(blocks,itf,model,input_path='myFC_model.inp',data_path='myDataFile.dat',fscore_path='myFactorScores.dat',title='myFC_model',

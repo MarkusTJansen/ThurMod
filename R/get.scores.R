@@ -42,7 +42,6 @@
 #' 
 #' # read and save data set FC
 #' data(FC)
-#' data(FC_raw)
 #'   
 #' # set seed and define blocks
 #' blocks <- matrix(c(1:15,1,4,7,8,11,14), ncol = 3, byrow=TRUE)
@@ -57,17 +56,17 @@
 #' ests <- get.scores(dat=as.matrix(FC),itf=itf, blocks=blocks,
 #' fit = fit,mp=rep(0,max(itf)), 
 #' sp=diag(1,max(itf)),estimator="MAP",sv=NULL, alg=mvtnorm::Miwa(),log=TRUE, mplus=FALSE)
-#' scores <- lavaan::lavPredict(fit)
+#' 
 #' @references 
-#' Maydeu-Olivares, A., & Böckenholt, U. (2005). Structural equation modeling of paired-comparison and ranking data. \emph{Psychological Methods}, \emph{10}(3), 285-304. \url{https://doi.org/10.1037/1082-989X.10.3.285}
-#' 
-#' Maydeu-Olivares, A., & Brown, A. (2010). Item response modeling of paired comparison and ranking data. \emph{Multivariate Behavioural Research}, \emph{45}(6), 935-974. \url{https://doi.org/10.1080/00273171.2010.531231}
+#' Maydeu-Olivares, A., & Böckenholt, U. (2005). Structural equation modeling of paired-comparison and ranking data. \emph{Psychological Methods}, \emph{10}(3), 285-304. \doi{10.1037/1082-989X.10.3.285}
+#'
+#' Maydeu-Olivares, A., & Brown, A. (2010). Item response modeling of paired comparison and ranking data. \emph{Multivariate Behavioural Research}, \emph{45}(6), 935-974. \doi{10.1080/00273171.2010.531231}
 #'  
-#' Jansen, M. T., & Schulze, R. (2023a). \emph{Linear factor analytic Thurstonian forced-choice models: Current status and issues}. Manuscript submitted.
+#' Jansen, M. T., & Schulze, R. (2023a). \emph{Linear factor analytic Thurstonian forced-choice models: Current status and issues}. Educational and Psychological Measurement.
 #' 
-#' Jansen, M. T., & Schulze, R. (2023b). \emph{The Thurstonian linked block design: Improving Thurstonian modeling for paired comparison and ranking data}. Manuscript submitted.
+#' Jansen, M. T., & Schulze, R. (2023b, in review). \emph{The Thurstonian linked block design: Improving Thurstonian modeling for paired comparison and ranking data}. 
 #' 
-#' Yousfi, S. (2019). Person Parameter Estimation for IRT Models of Forced-Choice Data: Merits and Perils of Pseudo-Likelihood Approaches. In: Wiberg, M., Molenaar, D., González, J., Böckenholt, U., Kim, JS. (eds) \emph{Quantitative Psychology}. IMPS 2019. Springer Proceedings in Mathematics & Statistics, vol 322. Springer, Cham. \url{https://doi.org/10.1007/978-3-030-43469-4_3}.
+#' Yousfi, S. (2019). Person Parameter Estimation for IRT Models of Forced-Choice Data: Merits and Perils of Pseudo-Likelihood Approaches. In: Wiberg, M., Molenaar, D., González, J., Böckenholt, U., Kim, JS. (eds) \emph{Quantitative Psychology}. IMPS 2019. Springer Proceedings in Mathematics & Statistics, vol 322. Springer, Cham. \doi{10.1007/978-3-030-43469-4_3}.
 #'
 #' @export
 

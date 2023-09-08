@@ -24,11 +24,11 @@
 #' 
 #'
 #' @references 
-#' Brown, A, & Maydeu-Olivares, A. (2011). Item response modeling of forced-choice questionnaires. \emph{Educational and Psychological Measurement}, \emph{71}(3), 460-502. \url{https://doi.org/10.1177/0013164410375112}
+#' Brown, A, & Maydeu-Olivares, A. (2011). Item response modeling of forced-choice questionnaires. \emph{Educational and Psychological Measurement}, \emph{71}(3), 460-502. \doi{10.1177/0013164410375112}
 #' 
-#' Jansen, M. T., & Schulze, R. (2023). \emph{The Thurstonian linked block design: Improving Thurstonian modeling for paired comparison and ranking data}. Manuscript submitted.
+#' Jansen, M. T., & Schulze, R. (in review). \emph{The Thurstonian linked block design: Improving Thurstonian modeling for paired comparison and ranking data}.
 #' 
-#' Maydeu-Olivares, A., & Böckenholt, U. (2005). Structural equation modeling of paired-comparison and ranking data. \emph{Psychological Methods}, \emph{10}(3), 285-304. \url{https://doi.org/10.1037/1082-989X.10.3.285}.
+#' Maydeu-Olivares, A., & Böckenholt, U. (2005). Structural equation modeling of paired-comparison and ranking data. \emph{Psychological Methods}, \emph{10}(3), 285-304. \doi{10.1037/1082-989X.10.3.285}.
 #'
 #fit.mplus(1:15,rep(1:3,5),'irt')
 #FC_scores <- read.table('myFactorScores.dat')
