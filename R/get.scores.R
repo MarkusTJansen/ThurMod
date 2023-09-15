@@ -42,18 +42,21 @@
 #' 
 #' # read and save data set FC
 #' data(FC)
+#' 
 #'   
 #' # set seed and define blocks
-#' blocks <- matrix(c(1:15,1,4,7,8,11,14), ncol = 3, byrow=TRUE)
+#' blocks <- matrix(c(5,2,1,4,7,6,3,8,10,12,9,11), ncol = 3)
+#' 
+#' FC <- FC[,i.name(blocks)]
 #' 
 #' # define the item-to-factor relation
-#' itf <- rep(1:3,5)
+#' itf <- rep(1:3,4)
 #' 
 #' # Create and run syntax
 #' fit <- fit.lavaan(blocks, itf, 'irt', FC, estimator = 'ULSMV')
 #' 
-#' # get scores
-#' ests <- get.scores(dat=as.matrix(FC),itf=itf, blocks=blocks,
+#' # get scores for the first two respondents
+#' ests <- get.scores(dat=as.matrix(FC)[1:2,],itf=itf, blocks=blocks,
 #' fit = fit,mp=rep(0,max(itf)), 
 #' sp=diag(1,max(itf)),estimator="MAP",sv=NULL, alg=mvtnorm::Miwa(),log=TRUE, mplus=FALSE)
 #' 

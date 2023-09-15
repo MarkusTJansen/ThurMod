@@ -39,6 +39,11 @@ library(ThurMod)
 designA(4)
 ```
 
+```{r, echo=FALSE}
+load("4v.RData")
+```
+
+
 The design matrix can be (Jansen \& Schulze, 2023b):
 
  <ul>
@@ -99,11 +104,11 @@ write.table(data, 'myDataFile_f.dat', quote = FALSE, sep = " ", col.names = FALS
 
 The data set contains all (12 \times 11)/2 = 66 possible paired comparison variables. With this data set we will perform analyses of the full design (IRT, CFA).
 
-## Full model
+## Full design
 
-Full models include all paired comparisons. The estimation of these models can take a while, as with categorical data a large correlations matrix must be estimated.
+Full designs include all paired comparisons. The estimation of these designs can take a while, as with categorical data a large correlations matrix must be estimated.
 
-For all functions, the blocks we use must be defined. In a full model, there is only one block with all items:
+For all functions, the blocks we use must be defined. In a full design, there is only one block with all items:
 ```{r}
 blocks <- matrix(1:nitem, nrow = 1)
 ```
@@ -113,71 +118,86 @@ The `blocks` must be defined as a matrix where the rows correspond to each block
 We will analyse the data with Mplus and `lavaan`. We can do this in two ways: First, in three separate steps, second, directly.
 
 Way 1, step 1: Build syntax
-```{r, results="hide"}
+```{r}
 # Mplus
 syntax.mplus(blocks, itf, model = 'lmean', input_path = 'myFC_model_f.inp', data_path = 
                "myDataFile_f.dat")
-
+```
+```{r}
 #lavaan
 modelsyn <- syntax.lavaan(blocks, itf, model = 'lmean')
 ```
-For step 2, now these syntaxes must be run (Mplus will be commented):
-```{r, results="hide"}
+For step 2, now these syntaxes must be run (evaluation will not be performed here):
+```{r, eval = FALSE}
 # Mplus
-#system('mplus myFC_model_f.inp', wait = TRUE, show.output.on.console= FALSE)
-
+system('mplus myFC_model_f.inp', wait = TRUE, show.output.on.console= FALSE)
+```
+```{r, eval = FALSE}
 #lavaan
 results_lav1 <- lavaan::lavaan(modelsyn, data = data, ordered = TRUE, auto.fix.first = FALSE,
                       auto.var = TRUE, int.lv.free = TRUE, parameterization = "theta",
                       estimator = 'ULSMV')
 ```
-If you replicate this, be patient, it can take about 40 minutes each, depending on your processing power. 
+If you replicate this, be patient, it can take about 20 minutes each, depending on your processing power. 
 
 Step 3: Read results. For Mplus you can either open the output file, or use `read.mplus`
-```{r}
+```{r,eval = FALSE}
 # Mplus
-#results_mplus1 <- read.mplus(blocks, itf, model = 'lmean', output_path = "myFC_model_f.out")
-#unlist(results_mplus1$fit)
-
-#lavaan
+results_mplus1 <- read.mplus(blocks, itf, model = 'lmean', output_path = "myFC_model_f.out")
+```
+```{r}
+unlist(results_mplus1$fit)
+```
+```{r, eval = FALSE}
+results_lav1 <- lavaan::fitmeasures(results_lav1)[c('chisq.scaled','df.scaled','pvalue.scaled',
+                                     'rmsea.scaled','rmsea.ci.lower.scaled','rmsea.ci.upper.scaled',
+                                     'rmsea.pvalue.scaled','cfi.scaled')]
+```
+```{r}
 results_lav1
-lavaan::fitmeasures(results_lav1)[c('rmsea.scaled','rmsea.ci.lower.scaled','rmsea.ci.upper.scaled',
-                                    'rmsea.pvalue.scaled','cfi.scaled')]
 ```
 
 The second way is to use `fit_mplus` or `fit_lavaan`, each function does the above steps at once:
-```{r}
+```{r, eval = FALSE}
 # Mplus
-#results_mplus2 <- fit.mplus(blocks, itf, model = 'lmean', input_path = 'myFC_model_f.inp',
-#                            output_path = "myFC_model_f.out", data_path = "myDataFile_f.dat")
-#unlist(results_mplus2$fit)
-
+results_mplus2 <- fit.mplus(blocks, itf, model = 'lmean', input_path = 'myFC_model_f.inp',
+                            output_path = "myFC_model_f.out", data_path = "myDataFile_f.dat")
+```
+```{r, eval =  FALSE}
 #lavaan
 results_lav2 <- fit.lavaan(blocks, itf, model = 'lmean', data = data)
-results_lav2
 lavaan::fitmeasures(results_lav2)[c('rmsea.scaled','rmsea.ci.lower.scaled','rmsea.ci.upper.scaled',
                                     'rmsea.pvalue.scaled','cfi.scaled')]
 ```
 
 ### Thurstonian IRT models
 For IRT models, the procedure is the same, just change `model = 'lmean'` to `model = 'irt'`, for example
-```{r, eval = FALSE, results="hide"}
+```{r, eval = FALSE}
 # Mplus
-#results_mplus2irt <- fit.mplus(blocks, itf, model = 'irt', input_path = 'myFC_model_irt.inp',
-#                               output_path = "myFC_model_irt.out", data_path = "myDataFile_f.dat")
-#unlist(results_mplus2irt$fit)
-
+results_mplus2irt <- fit.mplus(blocks, itf, model = 'irt', input_path = 'myFC_model_irt.inp',
+                               output_path = "myFC_model_irt.out", data_path = "myDataFile_f.dat")
+```
+```{r}
+unlist(results_mplus2irt$fit)
+```
+```{r, eval = FALSE}
 #lavaan
 results_lav2irt <- fit.lavaan(blocks, itf, model = 'irt', data = data)
+```
+```{r, eval = FALSE}
+results_lav2irt <- lavaan::fitmeasures(results_lav2irt)[c('chisq.scaled','df.scaled','pvalue.scaled',
+                                     'rmsea.scaled','rmsea.ci.lower.scaled','rmsea.ci.upper.scaled',
+                                     'rmsea.pvalue.scaled','cfi.scaled')]
+```
+```{r}
 results_lav2irt
-lavaan::fitmeasures(results_lav2irt)[c('rmsea.scaled', 'rmsea.ci.lower.scaled',
-                                       'rmsea.ci.upper.scaled','rmsea.pvalue.scaled',
-                                       'cfi.scaled')]
-scores <- lavaan::lavPredict(results_lav2irt)
+```
+```{r, eval = FALSE}
+scores_results_lav2irt <- lavaan::lavPredict(results_lav2irt)
 ```
 
-## Block models - unlinked
-The first block models were introduced as multidimensional forced-choice blocks (Brown \& Maydeu-Olivares, 2011). However, it was shown that the models must neither be multidimensional, nor must every paired comparison only be contained once (Jansen \& Schulze, 2023b).
+## Block designs - unlinked
+The first block designs were introduced as multidimensional forced-choice blocks (Brown \& Maydeu-Olivares, 2011). However, it was shown that the designs must neither be multidimensional, nor must every paired comparison only be contained once (Jansen \& Schulze, 2023b).
 
 We first simulate a new data set. Set up the simulation conditions:
 ```{r}
@@ -264,49 +284,69 @@ write.table(data_recoded, 'myDataFile_rec.dat', quote = FALSE, sep = " ", col.na
 ```
 
 Both ways yield the same results. We have to add the argument `data_full = TRUE`, as we simulated all data in the data file, but only use some of the data. We demonstrate only the `model = 'irt'` case, however, also for the CFA model types, these analyses can be performed (`model = 'lmean'`, `model = 'uc'`, or `model = 'simple'`).
-```{r}
+```{r, eval = FALSE}
 # Blocks_sorted
 # Mplus
-#results_mplus_b <- fit.mplus(blocks_sorted, itf, model = 'irt', input_path = 'myFC_model_bu.inp',
-#                             output_path = "myFC_model_bu.out", data_path = "myDataFile.dat",
-#                             data_full = TRUE)
-#unlist(results_mplus_b$fit)
-
+results_mplus_b <- fit.mplus(blocks_sorted, itf, model = 'irt', input_path = 'myFC_model_bu.inp',
+                             output_path = "myFC_model_bu.out", data_path = "myDataFile.dat",
+                             data_full = TRUE)
+```
+```{r}
+unlist(results_mplus_b$fit)
+```
+```{r, eval = FALSE}
 #lavaan
 results_lav_b <- fit.lavaan(blocks_sorted, itf, model = 'irt', data = data)
+results_lav_b_fm <- lavaan::fitmeasures(results_lav_b)
+```
+```{r, eval = FALSE}
+results_lav_b <- lavaan::fitmeasures(results_lav_b)[c('chisq.scaled','df.scaled','pvalue.scaled',
+                                     'rmsea.scaled','rmsea.ci.lower.scaled','rmsea.ci.upper.scaled',
+                                     'rmsea.pvalue.scaled','cfi.scaled')]
+```
+```{r}
 results_lav_b
-lavaan::fitmeasures(results_lav_b)[c('rmsea.scaled','rmsea.ci.lower.scaled','rmsea.ci.upper.scaled',
-                                     'rmsea.pvalue.scaled', 'cfi.scaled')]
+```
+```{r, eval = FALSE}
+scores_results_lav_b <- lavaan::lavPredict(results_lav_b)
+```
 
-lavaan::summary(results_lav_b)
-scores <- lavaan::lavPredict(results_lav_b)
-
+```{r eval = FALSE}
 # Recoded data
 # Mplus
-#results_mplus_brec <- fit.mplus(blocks, itf, model = 'irt', input_path = 'myFC_model_brecu.inp',
-#                                output_path = "myFC_model_brecu.out", data_path = 
-#                                  "myDataFile_rec.dat", data_full = TRUE)
-#unlist(results_mplus_brec$fit)
-
+results_mplus_brec <- fit.mplus(blocks, itf, model = 'irt', input_path = 'myFC_model_brecu.inp',
+                                output_path = "myFC_model_brecu.out", data_path = 
+                                  "myDataFile_rec.dat", data_full = TRUE)
+```
+```{r}
+unlist(results_mplus_brec$fit)
+```
+```{r, eval = FALSE}
 #lavaan
 results_lav_brec <- fit.lavaan(blocks, itf, model = 'irt', data = data_recoded)
+```
+```{r, eval = FALSE}
+results_lav_brec <- lavaan::fitmeasures(results_lav_brec)[c('chisq.scaled','df.scaled','pvalue.scaled',
+                                     'rmsea.scaled','rmsea.ci.lower.scaled','rmsea.ci.upper.scaled',
+                                     'rmsea.pvalue.scaled','cfi.scaled')]
+```
+```{r}
 results_lav_brec
-lavaan::fitmeasures(results_lav_brec)[c('rmsea.scaled', 'rmsea.ci.lower.scaled',
-                                        'rmsea.ci.upper.scaled','rmsea.pvalue.scaled',
-                                        'cfi.scaled')]
-scores <- lavaan::lavPredict(results_lav_brec)
+```
+```{r, eval = FALSE}
+scores_results_lav_brec <- lavaan::lavPredict(results_lav_brec)
 ```
 
 In the case of blocks, we must correct the fit indices, as there are redundancies among the thresholds and tetrachoric correlations. The redundancies can be determined with the function `redundancies`. We can also directly correct the fit with `fit.correct`:
 ```{r}
 #save fit measures
-tmp <- lavaan::fitmeasures(results_lav_brec)
+tmp <- results_lav_b_fm
 fit.correct(1000, blocks, tmp['chisq.scaled'], tmp['df.scaled'], tmp['baseline.chisq.scaled'],
             tmp['baseline.df.scaled'])
 ```
 
 
-## Block models - linked
+## Block designs - linked
 Now, we consider linked block designs (Jansen \& Schulze, 2023b). The simplest way to construct these designs is to take the original unlinked design and link all blocks together (rank of the design $r_D=N-1$, where $N$ is the number of items; Jansen \& Schulze, 2023b). The original blocks are:
 ```{r}
 blocks
@@ -318,15 +358,15 @@ count.xblocks(blocks)
 ```
 Hence, we need five extra triplets in this case. We add for example the following linking blocks:
  <ul>
-  <li>block 1: 25,30,16</li>
-  <li>block 2: 5,25,13</li>
-  <li>block 3: 26,8,20</li>
-  <li>block 4: 4,29,19</li>
-  <li>block 5: 1,3,21</li>
+  <li>block 1: 23,14,8</li>
+  <li>block 2: 24,28,4</li>
+  <li>block 3: 25,16,29</li>
+  <li>block 4: 22,26,13</li>
+  <li>block 5: 1,21,30</li>
 </ul> 
 
 ```{r}
-blocks_extra <- matrix(c(25,30,16,5,25,13,26,8,20,4,29,19,1,3,21), ncol = 3, byrow = TRUE)
+blocks_extra <- matrix(c(23,14,8,24,28,4,25,16,29,22,26,13,1,21,30), ncol = 3, byrow = TRUE)
 blocks_con <- rbind(blocks, blocks_extra)
 ```
 
@@ -341,7 +381,7 @@ metablock(blocks_con)
 There is only one meta block, therefore all items are linked. A counter example would be if we would not add block 4:
 
 ```{r}
-blocks_extra <- matrix(c(25,30,16,5,25,13,26,8,20,1,3,21), ncol = 3, byrow = TRUE)
+blocks_extra <- matrix(c(23,14,8,24,28,4,25,16,29,1,21,30), ncol = 3, byrow = TRUE)
 blocks_con <- rbind(blocks, blocks_extra)
 ```
 
@@ -349,7 +389,7 @@ Then the rank is
 ```{r}
 rankA(blocks_con)
 ```
-The rank is 30-1=29$\neq$ 27. And we have three "meta" blocks.
+The rank is 30-1=29$\neq$ 28. And we have two "meta" blocks.
 ```{r}
 metablock(blocks_con)
 ```
@@ -396,48 +436,70 @@ write.table(data_recoded, 'myDataFile_rec.dat', quote = FALSE, sep = " ", col.na
 ```
 
 The estimation of linked designs is done equivalent via
-```{r}
+```{r, eval = FALSE}
 # Blocks_sorted
 # Mplus
-#results_mplus_b <- fit.mplus(blocks_con_sorted,itf,model='irt',input_path='myFC_model_b_con.inp',
-#                             output_path="myFC_model_b_con.out",data_path="myDataFile.dat",
-#                             data_full = TRUE)
-#unlist(results_mplus_b$fit)
-
+results_mplus_bc <- fit.mplus(blocks_con_sorted,itf,model='irt',input_path='myFC_model_b_con.inp',
+                             output_path="myFC_model_b_con.out",data_path="myDataFile.dat",
+                             data_full = TRUE)
+```
+```{r}
+unlist(results_mplus_bc$fit)
+```
+```{r, eval = FALSE}
 #lavaan
-results_lav_b <- fit.lavaan(blocks_con_sorted, itf, model = 'irt', data = data)
-results_lav_b
-lavaan::fitmeasures(results_lav_b)[c('rmsea.scaled','rmsea.ci.lower.scaled','rmsea.ci.upper.scaled',
-                                     'rmsea.pvalue.scaled', 'cfi.scaled')]
-scores <- lavaan::lavPredict(results_lav_b)
+results_lav_bc <- fit.lavaan(blocks_con_sorted, itf, model = 'irt', data = data)
+results_lav_bc_fm <- lavaan::fitmeasures(results_lav_bc)
+```
+```{r, eval = FALSE}
+results_lav_bc <- lavaan::fitmeasures(results_lav_bc)[c('chisq.scaled','df.scaled','pvalue.scaled',
+                                     'rmsea.scaled','rmsea.ci.lower.scaled','rmsea.ci.upper.scaled',
+                                     'rmsea.pvalue.scaled','cfi.scaled')]
+```
+```{r}
+results_lav_bc
+```
+```{r, eval = FALSE}
+scores_results_lav_bc <- lavaan::lavPredict(results_lav_bc)
+```
 
+```{r eval = FALSE}
 # Recoded data
 # Mplus
-#results_mplus_brec <- fit.mplus(blocks_con, itf, model = 'irt', input_path = 'myFC_model_brec.inp',
-#                                output_path = "myFC_model_brec.out",data_path =
-#                                  "myDataFile_rec.dat",data_full = TRUE, byblock = FALSE)
-#unlist(results_mplus_brec$fit)
-
+results_mplus_bcrec <- fit.mplus(blocks_con, itf, model = 'irt', input_path = 'myFC_model_brec.inp',
+                                output_path = "myFC_model_brec.out",data_path =
+                                  "myDataFile_rec.dat",data_full = TRUE, byblock = FALSE)
+```
+```{r}
+unlist(results_mplus_bcrec$fit)
+```
+```{r, eval = FALSE}
 #lavaan
-results_lav_brec <- fit.lavaan(blocks_con, itf, model = 'irt', data = data_recoded)
-results_lav_brec
-lavaan::fitmeasures(results_lav_brec)[c('rmsea.scaled', 'rmsea.ci.lower.scaled', 
-                                        'rmsea.ci.upper.scaled', 'rmsea.pvalue.scaled',
-                                        'cfi.scaled')]
-scores <- lavaan::lavPredict(results_lav_brec)
+results_lav_bcrec <- fit.lavaan(blocks_con, itf, model = 'irt', data = data_recoded)
+```
+```{r, eval = FALSE}
+results_lav_bcrec <- lavaan::fitmeasures(results_lav_bcrec)[c('chisq.scaled','df.scaled','pvalue.scaled',
+                                     'rmsea.scaled','rmsea.ci.lower.scaled','rmsea.ci.upper.scaled',
+                                     'rmsea.pvalue.scaled','cfi.scaled')]
+```
+```{r}
+results_lav_bcrec
+```
+```{r, eval = FALSE}
+scores_results_lav_bcrec <- lavaan::lavPredict(results_lav_bcrec)
 ```
 
 Here, we also must correct the fit indices, as there are redundancies among the thresholds and tetrachoric correlations. Again, the redundancies can be determined with the function `redundancies`. We directly correct the fit with `fit.correct`:
 ```{r}
 #save fit measures
-tmp <- lavaan::fitmeasures(results_lav_brec)
+tmp <- results_lav_bc_fm
 fit.correct(1000, blocks_con, tmp['chisq.scaled'], tmp['df.scaled'], tmp['baseline.chisq.scaled'],
             tmp['baseline.df.scaled'])
 ```
 
 ## Simulating only relevant data
 
-The estimation of a full model will most likely seldom be of interest. More likely, (linked) block designs are of interest. Especially for simulations with many items (more than 50), many binary variables are simulated and saved. While the simulation of all items is important (see Jansen \& Schulze, 2023b), saving all items is not. `sim.data` can also return only items that are of relevance. For that we need to specify the argument `variables`. Assume we have the linked block design we specified before. We only have to give the item names of the sorted blocks and define it as the `variables` argument:
+The estimation of a full design will most likely seldom be of interest. More likely, (linked) block designs are of interest. Especially for simulations with many items (more than 50), many binary variables are simulated and saved. While the simulation of all items is important (see Jansen \& Schulze, 2023b), saving all items is not. `sim.data` can also return only items that are of relevance. For that we need to specify the argument `variables`. Assume we have the linked block design we specified before. We only have to give the item names of the sorted blocks and define it as the `variables` argument:
 ```{r}
 #Get the relevant names
 tmp_names <- i.name(blocks_con_sorted)
@@ -459,7 +521,7 @@ Brown, A., \& Maydeu-Olivares, A. (2011). Item response modeling of forced-choic
 
 Jansen, M. T., \& Schulze, R. (2023a). <i>Item scaling of social desirability using conjoint measurement: A comparison of ratings, paired comparisons, and rankings</i>. Manuscript in preparation.
 
-Jansen, M. T., \& Schulze, R. (2023b). <i>The Thurstonian linked bock design: Improving Thurstonian modeling for paired comparison and ranking data</i>. Educational and Psychological Measurement.
+Jansen, M. T., \& Schulze, R. (in press). <i>The Thurstonian linked bock design: Improving Thurstonian modeling for paired comparison and ranking data</i>. Educational and Psychological Measurement.
 
 Maydeu-Olivares, A., \& Böckenholt, U. (2005). Structural equation modeling of paired-comparison and ranking data. <i>Psychological Methods</i>, <i>10</i>(3), 285–304. <a href="https://doi.org/10.1037/1082-989X.10.3.285">https://doi.org/10.1037/1082-989X.10.3.285</a>
 

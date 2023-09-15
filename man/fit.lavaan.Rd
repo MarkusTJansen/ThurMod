@@ -56,18 +56,20 @@ the second vector should contain the new names, for example
 }
 \examples{
 
-# read data set FC
+# read and save data set FC
 data(FC)
 
+  
 # set seed and define blocks
-set.seed(1)
-blocks <- matrix(sample(1:15,15), ncol = 3)
+blocks <- matrix(c(5,2,1,4,7,6,3,8,10,12,9,11), ncol = 3)
+
+FC <- FC[,i.name(blocks)]
 
 # define the item-to-factor relation
-itf <- rep(1:3,5)
+itf <- rep(1:3,4)
 
-# perform analysis
-fit.lavaan(blocksort(blocks),itf,'irt',data=FC)
+# Create and run syntax
+fit <- fit.lavaan(blocks, itf, 'irt', FC, estimator = 'ULSMV')
 
 }
 \references{
