@@ -14,7 +14,12 @@ recode(var = var, vals = c(1, 2, 3, 4, 5), ct = c(5, 4, 3, 2, 1),
 
 \item{ct}{A vector containing the desired scores.}
 
-\item{cat}{Logical. should the data be categorized?}
+\item{cat}{Logical. should the data be categorized?
+
+### Outputs ----}
+}
+\value{
+Returns a vector with the recoded input values.
 }
 \description{
 Recode variables.

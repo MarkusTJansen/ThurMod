@@ -12,7 +12,7 @@ glh <- function(fs, dat, nrank, blocks, thres_bs, lo, res, matT, ord, ord_o, est
                       matT=matT,ord_b=ord[,k],ord_o=ord_o[,k],alg=alg,log=log)
   }
   if(estimator=="MAP") {
-    return(mvtnorm::dmvnorm(x=fs, mean=mp, sigma=sp, log=T) + like)
+    return(mvtnorm::dmvnorm(x=fs, mean=mp, sigma=sp, log=TRUE) + like)
   } else {
     return(like)
   }

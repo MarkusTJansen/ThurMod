@@ -4,7 +4,7 @@
 \alias{redundancies}
 \title{Determine the number of redundancies}
 \usage{
-redundancies(blocks, warn = T)
+redundancies(blocks, warn = TRUE)
 }
 \arguments{
 \item{blocks}{A matrix defining the blocks of the model. The number of rows

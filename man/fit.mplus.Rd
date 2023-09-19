@@ -4,10 +4,10 @@
 \alias{fit.mplus}
 \title{Performs Mplus estimation of the given model.}
 \usage{
-fit.mplus(blocks, itf, model, input_path = "myFC_model.inp",
-  output_path = "myFC_model.out", data_path = "myDataFile.dat",
-  fscore_path = "myFactorScores.dat", title = "myFC_model", ID = FALSE,
-  byblock = TRUE, estimator = "ULSMV", data_full = F, standardized = T,
+fit.mplus(blocks, itf, model, input_path, output_path = NULL,
+  data_path = "myDataFile.dat", fscore_path = "myFactorScores.dat",
+  title = "myFC_model", ID = FALSE, byblock = TRUE,
+  estimator = "ULSMV", data_full = FALSE, standardized = TRUE,
   rename_list = NULL, ...)
 }
 \arguments{
@@ -85,7 +85,8 @@ the second vector should contain the new names, for example
 
 # read and save data set FC
 data(FC)
-#write.table(FC,'my_data.dat',quote=FALSE, sep=" ", col.names = FALSE, row.names = FALSE)
+write.table(FC,paste0(tempdir(),'/','my_data.dat'),quote=FALSE, sep=" ",
+col.names = FALSE, row.names = FALSE)
 
 # set seed and define blocks
 set.seed(1)
@@ -95,8 +96,10 @@ blocks <- matrix(sample(1:15,15), ncol = 3)
 itf <- rep(1:3,5)
 
 # perform analysis 
-#fit.mplus(blocksort(blocks),itf,'irt',data_path = 'mydata.dat', data_full = TRUE,
-#input_path = 'myFC_model')
+\dontrun{
+fit.mplus(blocksort(blocks),itf,'irt',data_path = 'mydata.dat', data_full = TRUE,
+input_path = paste0(tempdir(),'/','myFC_model'))
+}
 
 }
 \references{

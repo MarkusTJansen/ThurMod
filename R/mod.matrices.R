@@ -232,7 +232,7 @@ mod.matrices <- function(blocks,itf,model){
       APsiA <- sub('\\+$','',APsiA)#
       APsiA <- sub('^\\+','',APsiA)
       
-      APsiA <- sub('1/2+1/2','1',APsiA,fixed = T)
+      APsiA <- sub('1/2+1/2','1',APsiA,fixed = TRUE)
       
       if(length(gblocks)!=nblock){
         # Define new parameters

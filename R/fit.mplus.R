@@ -62,7 +62,8 @@
 #' 
 #' # read and save data set FC
 #' data(FC)
-#' #write.table(FC,'my_data.dat',quote=FALSE, sep=" ", col.names = FALSE, row.names = FALSE)
+#' write.table(FC,paste0(tempdir(),'/','my_data.dat'),quote=FALSE, sep=" ",
+#' col.names = FALSE, row.names = FALSE)
 #' 
 #' # set seed and define blocks
 #' set.seed(1)
@@ -72,8 +73,10 @@
 #' itf <- rep(1:3,5)
 #' 
 #' # perform analysis 
-#' #fit.mplus(blocksort(blocks),itf,'irt',data_path = 'mydata.dat', data_full = TRUE,
-#' #input_path = 'myFC_model')
+#' \dontrun{
+#' fit.mplus(blocksort(blocks),itf,'irt',data_path = 'mydata.dat', data_full = TRUE,
+#' input_path = paste0(tempdir(),'/','myFC_model'))
+#' }
 #' 
 #' @references 
 #' Maydeu-Olivares, A., & Böckenholt, U. (2005). Structural equation modeling of paired-comparison and ranking data. \emph{Psychological Methods}, \emph{10}(3), 285-304. \doi{10.1037/1082-989X.10.3.285}
@@ -88,15 +91,21 @@
 #' @export
 
 
-fit.mplus <- function(blocks,itf,model,input_path='myFC_model.inp',output_path='myFC_model.out',data_path='myDataFile.dat',fscore_path='myFactorScores.dat',title='myFC_model',
-                      ID=FALSE, byblock=TRUE,estimator='ULSMV',data_full=F,standardized=T,rename_list=NULL,...){
-  
+fit.mplus <- function(blocks,itf,model,input_path,output_path=NULL,data_path='myDataFile.dat',fscore_path='myFactorScores.dat',title='myFC_model',
+                      ID=FALSE, byblock=TRUE,estimator='ULSMV',data_full=FALSE,standardized=TRUE,rename_list=NULL,...){
+  if(is.null(input_path)){
+    stop('You need to specify a Mplus input file in object input_path.')
+  }
   if(!is.matrix(blocks)&!is.vector(blocks)){
     stop('Blocks must be given as a matrix. Only for full designs a vector is possible.')
   }
   if(is.vector(blocks)){
     blocks <- matrix(blocks,nrow=1)
   }
+  if(is.null(output_path)){
+    output_path <- sub('.inp','.out',input_path)
+  }
+  
   design <- ifelse(dim(blocks)[1]==1,'full','block')
   
   syntax.mplus(blocks,itf,model,input_path,data_path,fscore_path,title,

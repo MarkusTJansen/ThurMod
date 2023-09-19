@@ -34,6 +34,9 @@
 #' Vector one is the original names, vector two the new names. Defaults to `NULL`. 
 #' 
 ### Outputs ---- 
+#' @return Returns a description of the user-specified model. Typically, the
+#' model is described using the lavaan model syntax. See `lavaan::model.syntax`
+#' for more information. 
 #' 
 #' @details The syntax currently is able to perform model analysis for the
 #' latent utility models (`'simple'` and `'lmean'`; Maydeu-Olivares & Böckenholt, 2005) the 
@@ -52,12 +55,16 @@
 #' the second vector should contain the new names, for example 
 #' `c('A01E12','A01C13','E01C23','Agree','Extra','Consc')`.
 #' 
+#' ### Outputs ---- 
+#' @return Saves a list Mplus input file at 'input_path'.
+#' 
 ### Examples ----
 #' @examples
 #' 
 #' # read and save data set FC
 #' data(FC)
-#' #write.table(FC,'my_data.dat',quote=FALSE, sep=" ", col.names = FALSE, row.names = FALSE)
+#' write.table(FC,paste0(tempdir(),'/','my_data.dat'),quote=FALSE, sep=" ",
+#' col.names = FALSE, row.names = FALSE)
 #' 
 #' # set seed and define blocks
 #' set.seed(1)
@@ -67,8 +74,8 @@
 #' itf <- rep(1:3,5)
 #' 
 #' # Create and save Mplus syntax
-#' #syntax.mplus(blocks,itf,'lmean',data_path = 'my_data.dat', data_full = TRUE,
-#' #input_path = 'myFC_model')
+#' syntax.mplus(blocks,itf,'lmean',data_path = 'my_data.dat', data_full = TRUE,
+#' input_path = paste0(tempdir(),'/','myFC_model'))
 #' 
 #' @references 
 #' Maydeu-Olivares, A., & Böckenholt, U. (2005). Structural equation modeling of paired-comparison and ranking data. \emph{Psychological Methods}, \emph{10}(3), 285-304. \doi{10.1037/1082-989X.10.3.285}
@@ -81,9 +88,11 @@
 #' 
 #' @export
 
-syntax.mplus <- function(blocks,itf,model,input_path='myFC_model.inp',data_path='myDataFile.dat',fscore_path='myFactorScores.dat',title='myFC_model',
-                         ID=FALSE, byblock=TRUE,estimator='ULSMV',data_full=F,standardized=T,rename_list=NULL){
-  
+syntax.mplus <- function(blocks,itf,model,input_path,data_path='myDataFile.dat',fscore_path='myFactorScores.dat',title='myFC_model',
+                         ID=FALSE, byblock=TRUE,estimator='ULSMV',data_full=FALSE,standardized=TRUE,rename_list=NULL){
+  if(is.null(input_path)){
+    stop('You need to specify a Mplus input file in object input_path.')
+  }
   if(model=='simple2'){
     model <- 'simple'
     case <- 2

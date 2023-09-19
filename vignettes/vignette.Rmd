@@ -98,8 +98,8 @@ data <- sim.data(nfactor = nfactor, nitem = nitem, nperson = nperson, itf = itf,
                  varcov = varcov, lmu = lmu, loadings = loadings)
 
 #save the file
-write.table(data, 'myDataFile_f.dat', quote = FALSE, sep = " ", col.names = FALSE, row.names = 
-              FALSE)
+write.table(data, paste0(tempdir(),'/','myDataFile_f.dat'), quote = FALSE, 
+            sep = " ", col.names = FALSE, row.names = FALSE)
 ```
 
 The data set contains all (12 \times 11)/2 = 66 possible paired comparison variables. With this data set we will perform analyses of the full design (IRT, CFA).
@@ -118,7 +118,7 @@ The `blocks` must be defined as a matrix where the rows correspond to each block
 We will analyse the data with Mplus and `lavaan`. We can do this in two ways: First, in three separate steps, second, directly.
 
 Way 1, step 1: Build syntax
-```{r}
+```{r, eval =FALSE}
 # Mplus
 syntax.mplus(blocks, itf, model = 'lmean', input_path = 'myFC_model_f.inp', data_path = 
                "myDataFile_f.dat")
@@ -218,6 +218,8 @@ Next, we simulate a data set based on the true parameter values:
 set.seed(1234)
 data <- sim.data(nfactor = nfactor, nitem = nitem, nperson = nperson, itf = itf, varcov = varcov,
                  lmu = lmu, loadings = loadings)
+```
+```{r, eval = FALSE}
 #save the file
 write.table(data,'myDataFile.dat', quote = FALSE, sep = " ", col.names = FALSE, row.names = FALSE)
 ```
@@ -278,6 +280,8 @@ data_recoded <- data
 data_recoded[,tmp] <- abs(data[,tmp]-1)
 names(data_recoded) <- pair_names
 
+```
+```{r, eval = FALSE}
 # Save data
 write.table(data_recoded, 'myDataFile_rec.dat', quote = FALSE, sep = " ", col.names = FALSE,
             row.names = FALSE)
@@ -429,7 +433,8 @@ data_recoded <- data
 # Recode and rename
 data_recoded[,tmp] <- abs(data[,tmp]-1)
 names(data_recoded) <- pair_names
-
+``` 
+```{r, eval = FALSE}
 # Save data
 write.table(data_recoded, 'myDataFile_rec.dat', quote = FALSE, sep = " ", col.names = FALSE,
             row.names = FALSE)
@@ -508,6 +513,8 @@ tmp_names <- i.name(blocks_con_sorted)
 set.seed(1234)
 data <- sim.data(nfactor = nfactor, nitem = nitem, nperson = nperson, itf = itf, varcov = varcov,
                  lmu = lmu, loadings = loadings, variables = tmp_names)
+```
+```{r, eval = FALSE}
 #save the file
 write.table(data, 'myDataFile.dat', quote = FALSE, sep = " ", col.names = FALSE,
             row.names = FALSE)

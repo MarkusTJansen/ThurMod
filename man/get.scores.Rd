@@ -4,8 +4,8 @@
 \alias{get.scores}
 \title{Estimate factor scores based on Genuine Likelihood}
 \usage{
-get.scores(dat, blocks, itf, fit, alg = mvtnorm::TVPACK(), log = T, mp, sp,
-  serr = T, sv = NULL, blocks_ul = NULL, mplus = F, ...)
+get.scores(dat, blocks, itf, fit, alg = mvtnorm::TVPACK(), log = TRUE, mp,
+  sp, serr = TRUE, sv = NULL, blocks_ul = NULL, mplus = FALSE, ...)
 }
 \arguments{
 \item{dat}{A data.frame or matrix defining holding the binary coded and named
@@ -40,6 +40,9 @@ for comparison with other functions based on R.}
 
 \item{...}{other arguments passed by get.scores for optim.}
 }
+\value{
+The result is a list with the factor scores and the standard errors per person and factor.
+}
 \description{
 This function estimates factor scores based on genuine likelihood (Yousfi, 2019).
 }
@@ -56,25 +59,23 @@ The standard naming procedure ixiy, for the comparison of items x and y.
 }
 \examples{
 
-# read and save data set FC
-data(FC)
 
-  
+# read and save data set FC
+data(FC12)
+
 # set seed and define blocks
 blocks <- matrix(c(5,2,1,4,7,6,3,8,10,12,9,11), ncol = 3)
-
-FC <- FC[,i.name(blocks)]
 
 # define the item-to-factor relation
 itf <- rep(1:3,4)
 
 # Create and run syntax
-fit <- fit.lavaan(blocks, itf, 'irt', FC, estimator = 'ULSMV')
+\donttest{fit <- fit.lavaan(blocks, itf, 'irt', FC, estimator = 'ULSMV')
 
 # get scores for the first two respondents
 ests <- get.scores(dat=as.matrix(FC)[1:2,],itf=itf, blocks=blocks,
 fit = fit,mp=rep(0,max(itf)), 
-sp=diag(1,max(itf)),estimator="MAP",sv=NULL, alg=mvtnorm::Miwa(),log=TRUE, mplus=FALSE)
+sp=diag(1,max(itf)),estimator="MAP",sv=NULL, alg=mvtnorm::Miwa(),log=TRUE, mplus=FALSE)}
 
 }
 \references{

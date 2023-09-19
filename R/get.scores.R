@@ -26,6 +26,7 @@
 #' @param ... other arguments passed by get.scores for optim.
 #' 
 ### Outputs ---- 
+#' @return The result is a list with the factor scores and the standard errors per person and factor.
 #' 
 #' @details The function estimates factor scores based on the Thurstonian IRT model
 #' and based on genuine likelihood proposed by Yousfi (2019). The function allows
@@ -40,25 +41,23 @@
 ### Examples ----
 #' @examples
 #' 
-#' # read and save data set FC
-#' data(FC)
 #' 
-#'   
+#' # read and save data set FC
+#' data(FC12)
+#' 
 #' # set seed and define blocks
 #' blocks <- matrix(c(5,2,1,4,7,6,3,8,10,12,9,11), ncol = 3)
-#' 
-#' FC <- FC[,i.name(blocks)]
 #' 
 #' # define the item-to-factor relation
 #' itf <- rep(1:3,4)
 #' 
 #' # Create and run syntax
-#' fit <- fit.lavaan(blocks, itf, 'irt', FC, estimator = 'ULSMV')
+#' \donttest{fit <- fit.lavaan(blocks, itf, 'irt', FC, estimator = 'ULSMV')
 #' 
 #' # get scores for the first two respondents
 #' ests <- get.scores(dat=as.matrix(FC)[1:2,],itf=itf, blocks=blocks,
 #' fit = fit,mp=rep(0,max(itf)), 
-#' sp=diag(1,max(itf)),estimator="MAP",sv=NULL, alg=mvtnorm::Miwa(),log=TRUE, mplus=FALSE)
+#' sp=diag(1,max(itf)),estimator="MAP",sv=NULL, alg=mvtnorm::Miwa(),log=TRUE, mplus=FALSE)}
 #' 
 #' @references 
 #' Maydeu-Olivares, A., & Böckenholt, U. (2005). Structural equation modeling of paired-comparison and ranking data. \emph{Psychological Methods}, \emph{10}(3), 285-304. \doi{10.1037/1082-989X.10.3.285}
@@ -74,7 +73,7 @@
 #' @export
 
 
-get.scores <- function(dat, blocks, itf, fit, alg = mvtnorm::TVPACK(), log = T, mp, sp, serr=T, sv=NULL,blocks_ul=NULL,mplus=F,...){
+get.scores <- function(dat, blocks, itf, fit, alg = mvtnorm::TVPACK(), log = TRUE, mp, sp, serr=TRUE, sv=NULL,blocks_ul=NULL,mplus=FALSE,...){
   if (is.vector(blocks)) {
     blocks <- matrix(blocks, nrow = 1)
   }
@@ -83,7 +82,7 @@ get.scores <- function(dat, blocks, itf, fit, alg = mvtnorm::TVPACK(), log = T, 
   nfactor <-  max(itf)
   nitem <- max(blocks)
   
-  if(mplus==T){
+  if(mplus==TRUE){
     resul <- read.mplus(blocks,itf,model='irt',fit,intercept=F)
     
     thres <- unlist(lapply(resul$thres,function(x) x[1]))

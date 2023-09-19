@@ -42,7 +42,7 @@
 #' @export
 
 
-redundancies <- function(blocks,warn=T){
+redundancies <- function(blocks,warn=TRUE){
   #message('Calculation gblocks...\n')
   gblocks <- metablock(blocks)
   nrank <- dim(blocks)[2]

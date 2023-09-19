@@ -25,9 +25,14 @@ Vector one is the original names, vector two the new names. Defaults to `NULL`.}
 \value{
 Returns a description of the user-specified model. Typically, the
 model is described using the lavaan model syntax. See `lavaan::model.syntax`
-for more information. 
-
-#' @details The syntax currently is able to perform model analysis for the
+for more information.
+}
+\description{
+This function writes a lavaan syntax given the specifications of the
+Thurstonian forced choice model.
+}
+\details{
+The syntax currently is able to perform model analysis for the
 latent utility models (`'simple'` and `'lmean'`; Maydeu-Olivares & Böckenholt, 2005) the 
 unconstrained factor model (`'uc'`; Maydeu-Olivares & Böckenholt, 2005) and 
 the IRT model(`'irt'`; Maydeu-Olivares & Brown, 2010). Additionally, all
@@ -41,10 +46,6 @@ the schould be the vector of original names, for example
 `c('i1i2','i1i3','i2i3','Trait1','Trait2','Trait3')`
 the second vector should contain the new names, for example 
 `c('A01E12','A01C13','E01C23','Agree','Extra','Consc')`.
-}
-\description{
-This function writes a lavaan syntax given the specifications of the
-Thurstonian forced choice model.
 }
 \examples{
 

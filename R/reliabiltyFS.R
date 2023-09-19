@@ -14,6 +14,9 @@
 #' @param method Can be one of 'div' or 'sub'. See details. Defaults to 'sub'.
 #'   
 ### Outputs ---- 
+#' @return Returns the reliability value. If method = 'irt', the a plot with the
+#' reliability depending on the factorscore is returned. 
+#' 
 #' @details The function returns the empirical reliability of factor scores. If
 #' \eqn{\sigma^2} is the sample variance of the estimated scores and \eqn{\bar{sigma}^2_{error}}
 #' is the average if the squared scores, that is

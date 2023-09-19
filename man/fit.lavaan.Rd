@@ -57,19 +57,16 @@ the second vector should contain the new names, for example
 \examples{
 
 # read and save data set FC
-data(FC)
+data(FC12)
 
-  
 # set seed and define blocks
 blocks <- matrix(c(5,2,1,4,7,6,3,8,10,12,9,11), ncol = 3)
-
-FC <- FC[,i.name(blocks)]
 
 # define the item-to-factor relation
 itf <- rep(1:3,4)
 
 # Create and run syntax
-fit <- fit.lavaan(blocks, itf, 'irt', FC, estimator = 'ULSMV')
+\donttest{fit <- fit.lavaan(blocks, itf, 'irt', FC, estimator = 'ULSMV')}
 
 }
 \references{

@@ -13,7 +13,11 @@
 #' @param ct A vector containing the desired scores.
 #' @param cat Logical. should the data be categorized?
 #' 
+#' ### Outputs ---- 
+#' @return Returns a vector with the recoded input values.
+#' 
 ### Deatils ----
+
 #' @details This function is a simple recode function. It is possible to recode any value to any other value, as long as the class of values within a vector are equal. If an interval of numerical values should be categorized, for N categories, N-1 thresholds must be given. The first N-1 categories are constructed by using all values that are smaller or equal (<=) than the thresholds, the last category is constructed to be all values larger than the last threshold.
 
 ### Examples ----

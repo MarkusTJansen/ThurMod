@@ -4,11 +4,10 @@
 \alias{syntax.mplus}
 \title{Create Mplus syntax for Thurstonian forced choice designs.}
 \usage{
-syntax.mplus(blocks, itf, model, input_path = "myFC_model.inp",
-  data_path = "myDataFile.dat", fscore_path = "myFactorScores.dat",
-  title = "myFC_model", ID = FALSE, byblock = TRUE,
-  estimator = "ULSMV", data_full = F, standardized = T,
-  rename_list = NULL)
+syntax.mplus(blocks, itf, model, input_path, data_path = "myDataFile.dat",
+  fscore_path = "myFactorScores.dat", title = "myFC_model", ID = FALSE,
+  byblock = TRUE, estimator = "ULSMV", data_full = FALSE,
+  standardized = TRUE, rename_list = NULL)
 }
 \arguments{
 \item{blocks}{A matrix defining the blocks of the model. The number of rows
@@ -50,6 +49,13 @@ to `TRUE`.}
 \item{rename_list}{A list with two vectors to rename the objects in the syntax.
 Vector one is the original names, vector two the new names. Defaults to `NULL`.}
 }
+\value{
+Returns a description of the user-specified model. Typically, the
+model is described using the lavaan model syntax. See `lavaan::model.syntax`
+for more information.
+
+Saves a list Mplus input file at 'input_path'.
+}
 \description{
 This function writes and saves the Mplus syntax given the specifications of a
 Thurstonian forced choice design.
@@ -71,12 +77,15 @@ the schould be the vector of original names, for example
 `c('i1i2','i1i3','i2i3','Trait1','Trait2','Trait3')`
 the second vector should contain the new names, for example 
 `c('A01E12','A01C13','E01C23','Agree','Extra','Consc')`.
+
+### Outputs ----
 }
 \examples{
 
 # read and save data set FC
 data(FC)
-#write.table(FC,'my_data.dat',quote=FALSE, sep=" ", col.names = FALSE, row.names = FALSE)
+write.table(FC,paste0(tempdir(),'/','my_data.dat'),quote=FALSE, sep=" ",
+col.names = FALSE, row.names = FALSE)
 
 # set seed and define blocks
 set.seed(1)
@@ -86,8 +95,8 @@ blocks <- matrix(sample(1:15,15), ncol = 3)
 itf <- rep(1:3,5)
 
 # Create and save Mplus syntax
-#syntax.mplus(blocks,itf,'lmean',data_path = 'my_data.dat', data_full = TRUE,
-#input_path = 'myFC_model')
+syntax.mplus(blocks,itf,'lmean',data_path = 'my_data.dat', data_full = TRUE,
+input_path = paste0(tempdir(),'/','myFC_model'))
 
 }
 \references{

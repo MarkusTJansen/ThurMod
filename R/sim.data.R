@@ -60,7 +60,7 @@
 #' @export
 
 ### Function definition ----
-sim.data <- function(nfactor=1,nitem,nperson,itf,model='factor',variables=NULL, ints=NULL, lmu=NULL, ivarcov=NULL, loadings=NULL, varcov=NULL, graded = FALSE, ncat=NULL, thres = NULL, transitive = T, var = 0, fvalues=F, sim=T){  
+sim.data <- function(nfactor=1,nitem,nperson,itf,model='factor',variables=NULL, ints=NULL, lmu=NULL, ivarcov=NULL, loadings=NULL, varcov=NULL, graded = FALSE, ncat=NULL, thres = NULL, transitive = TRUE, var = 0, fvalues=FALSE, sim=TRUE){  
   if(model%in%c('simple')){
     if(is.null(lmu)){
       stop('For simple Thurstonian models for Cases II, III and V you must specify latent item means (object lmu).')

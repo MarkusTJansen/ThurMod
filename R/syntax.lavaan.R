@@ -22,7 +22,7 @@
 #' model is described using the lavaan model syntax. See `lavaan::model.syntax`
 #' for more information. 
 #' 
-#' #' @details The syntax currently is able to perform model analysis for the
+#' @details The syntax currently is able to perform model analysis for the
 #' latent utility models (`'simple'` and `'lmean'`; Maydeu-Olivares & Böckenholt, 2005) the 
 #' unconstrained factor model (`'uc'`; Maydeu-Olivares & Böckenholt, 2005) and 
 #' the IRT model(`'irt'`; Maydeu-Olivares & Brown, 2010). Additionally, all

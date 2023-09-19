@@ -7,7 +7,8 @@
 sim.data(nfactor = 1, nitem, nperson, itf, model = "factor",
   variables = NULL, ints = NULL, lmu = NULL, ivarcov = NULL,
   loadings = NULL, varcov = NULL, graded = FALSE, ncat = NULL,
-  thres = NULL, transitive = T, var = 0, fvalues = F, sim = T)
+  thres = NULL, transitive = TRUE, var = 0, fvalues = FALSE,
+  sim = TRUE)
 }
 \arguments{
 \item{nfactor}{The number of factors. Defaults to 1.}

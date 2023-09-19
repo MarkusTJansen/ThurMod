@@ -31,14 +31,18 @@
 #' to `FALSE`.
 #' 
 ### Outputs ---- 
-#' @return Returns a list containing the specified results, after model analysis.
+#' @return Returns a list containing the specified results, after model analysis, by reading
+#' the results from the 'output_path'.
 #' 
 ### Examples ----
 #' @examples
 #' 
 #' # read and save data set FC
 #' data(FC)
-#' #write.table(FC,'my_data.dat',quote=FALSE, sep=" ", col.names = FALSE, row.names = FALSE)
+#' 
+#' write.table(FC,paste0(tempdir(),'/','my_data.dat'),quote=FALSE, sep=" ",
+#' col.names = FALSE, row.names = FALSE)
+#' 
 #' 
 #' # set seed and define blocks
 #' set.seed(1)
@@ -48,18 +52,24 @@
 #' itf <- rep(1:3,5)
 #' 
 #' # perform analysis 
-#' #fit.mplus(blocksort(blocks),itf,'irt',data_path = 'mydata.dat', data_full = TRUE,
-#' #input_path = 'myFC_model')
+#' \dontrun{
+#' fit.mplus(blocksort(blocks),itf,'irt',data_path = 'mydata.dat', data_full = TRUE,
+#' input_path = paste0(tempdir(),'/','myFC_model'))
+#' 
 #' 
 #' # After estimation
-#' #read.mplus(blocks,itf,'irt',output_path = 'myFC_model.out')
-#'  
+#' read.mplus(blocks,itf,'irt',output_path = paste0(tempdir(),'/','myFC_model.out'))
+#' }
 #' @export
 
 
 ### Function definition ----
-read.mplus <- function(blocks,itf,model,output_path='myFC_model.out',convergence=T,fit.stat=T,loading=T, cor=T, intercept=T, threshold=T, resvar=T,
-                       standardized=F){
+read.mplus <- function(blocks,itf,model,output_path,convergence=TRUE,fit.stat=TRUE,loading=TRUE, cor=TRUE, intercept=TRUE, threshold=TRUE, resvar=TRUE,
+                       standardized=FALSE){
+  
+  if(is.null(output_path)){
+    stop('You need to specify a Mplus output file in object output_path.')
+  }
   
   if(!is.matrix(blocks)&!is.vector(blocks)){
     stop('Blocks must be given as a matrix. Only for full designs a vector is possible.')
@@ -99,7 +109,7 @@ read.mplus <- function(blocks,itf,model,output_path='myFC_model.out',convergence
                  rep('^Chi-Square Test of Model Fit for the Baseline Model',3),rep('^RMSEA',2))
     offset <- c(2,2,3,2,3,4,2,3,4,2,4)
     name <- c('srmr','cfi','tli','chisq','df','pvalue','blchisq','bldf','blpvalue','rmsea','rmsea_p')
-    results$fit <- valuesMPout.fit(locator,offset,name,T,MPoutput,convergence)
+    results$fit <- valuesMPout.fit(locator,offset,name,TRUE,MPoutput,convergence)
   }
   
   if(loading){

@@ -16,6 +16,10 @@ the same order as for `scores`.}
 
 \item{method}{Can be one of 'div' or 'sub'. See details. Defaults to 'sub'.}
 }
+\value{
+Returns the reliability value. If method = 'irt', the a plot with the
+reliability depending on the factorscore is returned.
+}
 \description{
 This function returns a reliability estimate for factor scores estimated via
 the Thurstonian IRT models.
