@@ -7,8 +7,8 @@
 sim.data(nfactor = 1, nitem, nperson, itf, model = "factor",
   variables = NULL, ints = NULL, lmu = NULL, ivarcov = NULL,
   loadings = NULL, varcov = NULL, graded = FALSE, ncat = NULL,
-  thres = NULL, transitive = TRUE, var = 0, fvalues = FALSE,
-  sim = TRUE)
+  thres = NULL, transitive = TRUE, var = 0, eta = NULL,
+  fvalues = FALSE, sim = TRUE)
 }
 \arguments{
 \item{nfactor}{The number of factors. Defaults to 1.}
@@ -46,6 +46,8 @@ to return. If `NULL` (default), all variables are returned.}
 data is simulated, else paired comparison data is simulated. Defaults to `TRUE`.}
 
 \item{var}{A vector containing the variances for each paired comparison. Defaults to 0.}
+
+\item{eta}{A nfactor-dimensional matrix with factor scores. Defaults to `NULL`. If `NULL` factor scores are simulated from multivariate normal distribution.}
 
 \item{fvalues}{Logical. Should simulated factor values be returned? Defaults to `FALSE`.}
 

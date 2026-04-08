@@ -4,10 +4,11 @@
 \alias{syntax.mplus}
 \title{Create Mplus syntax for Thurstonian forced choice designs.}
 \usage{
-syntax.mplus(blocks, itf, model, input_path, data_path = "myDataFile.dat",
-  fscore_path = "myFactorScores.dat", title = "myFC_model", ID = FALSE,
-  byblock = TRUE, estimator = "ULSMV", data_full = FALSE,
-  standardized = TRUE, rename_list = NULL)
+syntax.mplus(blocks, itf, model, input_path = "myFC_model.inp",
+  data_path = "myDataFile.dat", fscore_path = "myFactorScores.dat",
+  title = "myFC_model", ID = FALSE, byblock = TRUE,
+  estimator = "ULSMV", data_full = FALSE, standardized = TRUE,
+  rename_list = NULL)
 }
 \arguments{
 \item{blocks}{A matrix defining the blocks of the model. The number of rows
