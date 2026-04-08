@@ -26,6 +26,7 @@
 #' @param transitive Logical. Should the data be transitive? If `TRUE`, ranking
 #' data is simulated, else paired comparison data is simulated. Defaults to `TRUE`.
 #' @param var A vector containing the variances for each paired comparison. Defaults to 0.
+#' @param eta A nfactor-dimensional matrix with factor scores. Defaults to `NULL`. If `NULL` factor scores are simulated from multivariate normal distribution.
 #' @param fvalues Logical. Should simulated factor values be returned? Defaults to `FALSE`.
 #' @param sim Logical. Should the simulated data be returned? Defaults to `TRUE`.
 #' 
@@ -60,7 +61,7 @@
 #' @export
 
 ### Function definition ----
-sim.data <- function(nfactor=1,nitem,nperson,itf,model='factor',variables=NULL, ints=NULL, lmu=NULL, ivarcov=NULL, loadings=NULL, varcov=NULL, graded = FALSE, ncat=NULL, thres = NULL, transitive = TRUE, var = 0, fvalues=FALSE, sim=TRUE){  
+sim.data <- function(nfactor=1,nitem,nperson,itf,model='factor',variables=NULL, ints=NULL, lmu=NULL, ivarcov=NULL, loadings=NULL, varcov=NULL, graded = FALSE, ncat=NULL, thres = NULL, transitive = TRUE, var = 0, eta=NULL,fvalues=FALSE, sim=TRUE){  
   if(model%in%c('simple')){
     if(is.null(lmu)){
       stop('For simple Thurstonian models for Cases II, III and V you must specify latent item means (object lmu).')
@@ -141,28 +142,27 @@ sim.data <- function(nfactor=1,nitem,nperson,itf,model='factor',variables=NULL, 
       t <- t(MASS::mvrnorm(nperson, lmu, ivarcov)) #eq 7 (MO&B, 2010) 
       lresp <- A%*%t
     }
-    if(model=='factor'){
-      # factor scores
-      # make eta
+    # factor scores
+    # make eta
+    if(is.null(eta)){
       eta <- t(MASS::mvrnorm(nperson, rep(0,nfactor), varcov))
+    }
+    if(dim(eta)[1]!=nfactor){
+      eta <- t(eta)
+    }
+    
+    if(model=='factor'){
       # latent variances (items)
       psi <- t(MASS::mvrnorm(nperson, rep(0,nitem), diag(1-c(tmp_l^2),nitem)))
-      
       pgam <- A%*%lmu
       At <- A%*%(lambda%*%eta+psi)
-      
       lresp <- apply(At,2,function(x) x+pgam) # eq 11 (MO&B, 2010)
     }
     if(model%in%c('uc','irt')){
-      # factor scores
-      # make eta
-      eta <- t(MASS::mvrnorm(nperson, rep(0,nfactor), varcov))
       # latent variances (items)
       psi <- t(MASS::mvrnorm(nperson, rep(0,nitem), diag(1-c(tmp_l^2),nitem)))
-      
       pgam <- -ints
       At <- A%*%(lambda%*%eta+psi)
-      
       lresp <- apply(At,2,function(x) x+pgam) # eq 21 (MO&B, 2010)
     }
     

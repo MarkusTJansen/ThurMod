@@ -77,6 +77,7 @@ read.mplus <- function(blocks,itf,model,output_path,convergence=TRUE,fit.stat=TR
   if(is.vector(blocks)){
     blocks <- matrix(blocks,nrow=1)
   }
+  
   design <- ifelse(dim(blocks)[1]==1,'full','block')
   
   # Find number of items per block
@@ -160,6 +161,7 @@ read.mplus <- function(blocks,itf,model,output_path,convergence=TRUE,fit.stat=TR
     results$cor <- valuesMPout(corloc,coroff,corname,MPoutput,convergence, standardized)
   }
   
+  
   if(model=='simple2'|model=='simple3'|model=='simple5'){
     corloc <- c()
     coroff <- c()
@@ -176,11 +178,12 @@ read.mplus <- function(blocks,itf,model,output_path,convergence=TRUE,fit.stat=TR
     
     corloc <- c(corloc,tmp)
     coroff <- c(coroff,1)
-
+    
     corname <- paste0('T',utils::combn(1:nitem,2)[1,],'T',utils::combn(1:nitem,2)[2,])
     results$cor <- valuesMPout(corloc,coroff,corname,MPoutput,convergence, standardized)
   }
-
+  
+  
   if(intercept){
     if(model!='lmean'&model!='simple2'&model!='simple3'&model!='simple5'){
       warning('Intercepts can only be retrieved from a latent mean model!')
@@ -220,6 +223,46 @@ read.mplus <- function(blocks,itf,model,output_path,convergence=TRUE,fit.stat=TR
     }
     results$resvar <- valuesMPout(varloc,varoff,varname,MPoutput,convergence, standardized)
   }
+  
+  if(model=='irt'){
+    if (dim(blocks)[2] == 2) {
+      uniq <- replicate(max(blocks), c(2, 0, 999, 999), simplify = FALSE)
+      names(uniq) <- paste0("e", 1:max(blocks))
+    }else{
+      # Uniquenesses
+      APsiA <- mod$APsiA
+      APsiA[upper.tri(APsiA,diag=TRUE)] <- ''
+      off <- apply(APsiA,2,function(x) mod$npair-length(which(x=="")))
+      loc <- mod$pair_names_b
+      
+      tmp <- c()
+      tmpo <- c()
+      for(i in 1:length(mod$pair_names_b)){
+        tmp <- c(tmp,rep(loc[i],off[i]))
+        if(off[i]!=0){
+          tmpo <- c(tmpo,1:off[i])
+        }
+      }
+      
+      loc <- gsub('i','I',paste0('^ ',tmp))
+      offset <- tmpo
+      APsiA_under  <- sub('-e','e_',APsiA)
+      APsiA_under <- APsiA_under[lower.tri(APsiA_under)]
+      APsiA_under <- ifelse(APsiA_under=='',NA,APsiA_under)
+      name <- APsiA_under[!is.na(APsiA_under)]
+      
+      uniq <- valuesMPout(loc, offset, name, MPoutput,convergence, standardized)
+      
+      
+      uniq <- uniq[-which(names(uniq)%in%names(which(table(gsub('_','',names(uniq)))>1)))]
+      index <- grep('_',names(uniq))
+      uniq[index] <- lapply(index, function(x) c(-1*uniq[[x]][1],uniq[[x]][2],-1*uniq[[x]][3],uniq[[x]][4]))
+      
+      names(uniq) <- gsub('_','',names(uniq))
+    }
+    results$uniq <- uniq
+  }
+  
   return(results)
 }
 

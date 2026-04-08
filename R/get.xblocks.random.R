@@ -5,14 +5,14 @@ get.xblocks.random <- function(nrank, blocks, item_not){
   if(!is.null(item_not)){
     tmp <- apply(matrix(blocks%in%item_not,ncol=nrank),1,any)
     not_blocks <- matrix(blocks[tmp,],ncol=nrank)
-    not_left <- split.matrix(not_blocks,1,nrank)
+    not_left <- split_matrix(not_blocks,1,nrank)
     blocks <- blocks[!tmp,]
   }
   
   # Init
   tmp_block <- matrix(nrow=0,ncol=nrank)
   if(length(blocks)>0){
-    left <- split.matrix(blocks,1,nrank)
+    left <- split_matrix(blocks,1,nrank)
   }else{
     left <- list()
   }

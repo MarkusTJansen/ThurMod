@@ -130,7 +130,7 @@ mod.matrices <- function(blocks,itf,model){
     # Part 2 (secondary factors)
     if(model!='simple'){
       if(nfactor==1&Arank==(nitem-1)){
-        input <- paste0(input, 'Trait1 BY\nt1@1\n', paste0(paste0('t',2:nitem,'*1'),collapse='\n'), ';\n\n')
+        #input <- paste0(input, 'Trait1 BY\nt1@1\n', paste0(paste0('t',2:nitem,'*1'),collapse='\n'), ';\n\n')
       }else{
         A_fac <- rep('',nfactor)
         

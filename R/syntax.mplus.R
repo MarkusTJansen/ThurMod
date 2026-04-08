@@ -88,7 +88,7 @@
 #' 
 #' @export
 
-syntax.mplus <- function(blocks,itf,model,input_path,data_path='myDataFile.dat',fscore_path='myFactorScores.dat',title='myFC_model',
+syntax.mplus <- function(blocks,itf,model,input_path='myFC_model.inp',data_path='myDataFile.dat',fscore_path='myFactorScores.dat',title='myFC_model',
                          ID=FALSE, byblock=TRUE,estimator='ULSMV',data_full=FALSE,standardized=TRUE,rename_list=NULL){
   if(is.null(input_path)){
     stop('You need to specify a Mplus input file in object input_path.')
@@ -411,7 +411,61 @@ syntax.mplus <- function(blocks,itf,model,input_path,data_path='myDataFile.dat',
     
     if(nrank==2){
       input <- paste0(input, '! Fix uniquenesses of all indicators to 1:\n')
-      input <- paste0(input, paste(pair_names_b,collapse = '@1\n'), '@1;\n')
+      input <- paste0(input, paste(pair_names_b,collapse = '@2;\n'), '@2;\n')
+      
+      # Create Matrix Psi for irt models
+      input <- paste0(input, '\n\n! Define structured uniquenesses:\n')
+      Psi <- ifelse(row(diag(nitem))==col(diag(nitem)),paste0('e',1:nitem),0)
+      Psi <- ifelse(Psi==0,'',Psi) # neu
+      A_sign <- ifelse(A==0,0,ifelse(A==1,'+','-')) # alt
+      
+      
+      APsi <- matrix(NA, nrow=length(pair_names_b), ncol=nitem)
+      for(i in 1:nitem){
+        for(j in 1:length(pair_names_b)){
+          tmp <- paste0(A_sign[j,],Psi[,i])
+          tmp <- sub('^-$','',sub('^\\+$','',tmp))
+          tmp <- sub('^-0.*','',sub('^\\+0.*','',sub('^0.*','',tmp)))
+          APsi[j,i] <- paste0(tmp, collapse ='')
+        }
+      }
+      APsi <- sub('^\\+','',APsi)
+      
+      APsiA <- matrix(NA, nrow=length(pair_names_b), ncol=length(pair_names_b))
+      for(i in 1:length(pair_names_b)){
+        for(j in 1:length(pair_names_b)){
+          tmp <- paste0(A_sign[i,],APsi[j,])
+          #tmp <- sub('\\+','',sub('^0.*','',tmp))
+          tmp <- sub('^0.*','',tmp)
+          APsiA[j,i] <- paste0(tmp, collapse ='')
+        }
+      }
+      APsiA <- ifelse(APsiA=='+-','',ifelse(APsiA=='-+','',APsiA))
+      APsiA <- gsub('-\\+','',APsiA)
+      APsiA <- gsub('\\+-','-',APsiA)
+      APsiA <- gsub('--','+',APsiA)
+      
+      
+      APsiA <- sub('-$','',APsiA)#
+      APsiA <- sub('\\+$','',APsiA)#
+      APsiA <- sub('^\\+','',APsiA)
+      
+      
+      APsiA_under  <- sub('-e','e_',APsiA)
+      APsiA_sign <- ifelse(APsiA=='','',ifelse(substr(APsiA,1,1)=='-','-',''))
+      
+      
+      # Correlations in Psi
+      APsiA_text <- matrix('', nrow=length(pair_names_b), ncol=length(pair_names_b))
+      for(i in 1:(nrow(APsiA)-1)){
+        for(j in (i+1):nrow(APsiA)){
+          APsiA_text[j,i] <- paste0(pair_names_b[i],' WITH ', pair_names_b[j], '@',APsiA_sign[j,i],'1;')
+        }
+      }
+      APsiA_text <- ifelse(APsiA=='','',APsiA_text)
+      APsiA_text <- paste0(ifelse(APsiA_text=='','',paste0(APsiA_text,'\n')), collapse = '')
+      
+      input <- paste0(input,'\n\n',APsiA_text,'\n\n')
       
       if(length(gblocks)!=nblock){
         # Model constraints
