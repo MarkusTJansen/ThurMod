@@ -7,7 +7,8 @@
 fit.mplus(blocks, itf, model, input_path, output_path = NULL,
   data_path = "myDataFile.dat", fscore_path = "myFactorScores.dat",
   title = "myFC_model", ID = FALSE, byblock = TRUE,
-  estimator = "ULSMV", data_full = FALSE, standardized = TRUE,
+  estimator = "ULSMV", data_full = FALSE, transitive = TRUE,
+  om_equal = FALSE, om_positive = FALSE, standardized = TRUE,
   rename_list = NULL, ...)
 }
 \arguments{
@@ -45,6 +46,15 @@ available in Mplus can be used. Defaults to `'ULSMV'`.}
 
 \item{data_full}{Logical. Are the data considered to be from a full design?
 Defaults to `FALSE`.}
+
+\item{transitive}{Logical. Are the data considered to be transitive?
+Defaults to `TRUE`.}
+
+\item{om_equal}{Logical. Are diagonal elements omega of Psi, the covariance matrix of 
+latent uncorrelated and unbiased error terms, equal? Defaults to `FALSE`.}
+
+\item{om_positive}{Logical. Are diagonal elements omega of Psi, the covariance matrix of 
+latent uncorrelated and unbiased error terms, strictly positve? Defaults to `FALSE`.}
 
 \item{standardized}{Logical. Should standardized values be computed? Defaults
 to `TRUE`.}

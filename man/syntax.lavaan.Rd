@@ -4,7 +4,8 @@
 \alias{syntax.lavaan}
 \title{Create lavaan syntax for Thurstonian forced choice analysis}
 \usage{
-syntax.lavaan(blocks, itf, model, rename_list = NULL)
+syntax.lavaan(blocks, itf, model, transitive = TRUE, om_equal = FALSE,
+  om_positive = FALSE, rename_list = NULL)
 }
 \arguments{
 \item{blocks}{A matrix defining the blocks of the model. The number of rows
@@ -18,6 +19,15 @@ the second three correspond to factor 2.}
 \item{model}{A descriptor for the model. Can be one of `'lmean'`,
 `'uc'`, `'irt'` or  `'simple2'`, `'simple3'` or `'simple5'`. The Number behind 
 the `'simple'` statement defines the Thurstone case.}
+
+\item{transitive}{Logical. Are the data considered to be transitive?
+Defaults to `TRUE`.}
+
+\item{om_equal}{Logical. Are diagonal elements omega of Psi, the covariance matrix of 
+latent uncorrelated and unbiased error terms, equal? Defaults to `FALSE`.}
+
+\item{om_positive}{Logical. Are diagonal elements omega of Psi, the covariance matrix of 
+latent uncorrelated and unbiased error terms, strictly positive? Defaults to `FALSE`. See Details.}
 
 \item{rename_list}{A list with two vectors to rename the objects in the syntax.
 Vector one is the original names, vector two the new names. Defaults to `NULL`.}
@@ -46,6 +56,10 @@ the schould be the vector of original names, for example
 `c('i1i2','i1i3','i2i3','Trait1','Trait2','Trait3')`
 the second vector should contain the new names, for example 
 `c('A01E12','A01C13','E01C23','Agree','Extra','Consc')`.
+
+For `om_positive` it is generally advised to use this only in case of non-
+positive estimates, if at all. `lavaan` takes a lot longer for estimation and
+sometimes produces strange solutions.
 }
 \examples{
 

@@ -5,6 +5,7 @@
 \title{Performs lavaan estimation of the given model.}
 \usage{
 fit.lavaan(blocks, itf, model, data = NULL, estimator = "ULSMV",
+  transitive = TRUE, om_equal = FALSE, om_positive = FALSE,
   rename_list = NULL)
 }
 \arguments{
@@ -25,6 +26,15 @@ and respondents as rows.}
 
 \item{estimator}{Which estimator should be used? All estimators that are
 available in `lavaan` can be used. Defaults to `'ULSMV'`.}
+
+\item{transitive}{Logical. Are the data considered to be transitive?
+Defaults to `TRUE`.}
+
+\item{om_equal}{Logical. Are diagonal elements omega of Psi, the covariance matrix of 
+latent uncorrelated and unbiased error terms, equal? Defaults to `FALSE`.}
+
+\item{om_positive}{Logical. Are diagonal elements omega of Psi, the covariance matrix of 
+latent uncorrelated and unbiased error terms, strictly positve? Defaults to `FALSE`.}
 
 \item{rename_list}{A list with two vectors to rename the objects in the syntax.
 Vector one is the original names, vector two the new names. Defaults to `NULL`.}
