@@ -14,6 +14,12 @@
 #' @param model A descriptor for the model. Can be one of `'lmean'`,
 #' `'uc'`, `'irt'` or  `'simple2'`, `'simple3'` or `'simple5'`. The Number behind 
 #' the `'simple'` statement defines the Thurstone case.
+#' @param transitive Logical. Are the data considered to be transitive?
+#' Defaults to `TRUE`.
+#' @param om_equal Logical. Are diagonal elements omega of Psi, the covariance matrix of 
+#' latent uncorrelated and unbiased error terms, equal? Defaults to `FALSE`.
+#' @param om_positive Logical. Are diagonal elements omega of Psi, the covariance matrix of 
+#' latent uncorrelated and unbiased error terms, strictly positive? Defaults to `FALSE`. See Details.
 #' @param rename_list A list with two vectors to rename the objects in the syntax.
 #' Vector one is the original names, vector two the new names. Defaults to `NULL`.
 #' 
@@ -36,6 +42,10 @@
 #' `c('i1i2','i1i3','i2i3','Trait1','Trait2','Trait3')`
 #' the second vector should contain the new names, for example 
 #' `c('A01E12','A01C13','E01C23','Agree','Extra','Consc')`.
+#' 
+#' For `om_positive` it is generally advised to use this only in case of non-
+#' positive estimates, if at all. `lavaan` takes a lot longer for estimation and
+#' sometimes produces strange solutions.
 #' 
 ### Examples ----
 #' @examples
@@ -68,7 +78,7 @@
 
 
 
-syntax.lavaan <- function(blocks,itf,model,rename_list=NULL){
+syntax.lavaan <- function(blocks,itf,model,transitive=TRUE,om_equal=FALSE,om_positive=FALSE,rename_list=NULL){
   
   if(model=='simple2'){
     model <- 'simple'
@@ -153,10 +163,33 @@ syntax.lavaan <- function(blocks,itf,model,rename_list=NULL){
     
     input <- paste0(input, paste(At_text, collapse='\n'), '\n\n')
     
-    # For rankings: Fix variances of indicators to 0
-    input <- paste0(input, '# Fix the variances of all indicators to 0:\n')
-    input <- paste0(input, paste0(pair_names_b,' ~~ 0*',pair_names_b, collapse = '\n'))
-    #### Whats with paired comparisons?
+    if(transitive){
+      input <- paste0(input, '# Fix the variances of all indicators to 0:\n')
+      input <- paste0(input, paste0(pair_names_b,' ~~ 0*',pair_names_b, collapse = '\n'), '\n\n')
+    }else{
+      if(om_equal){
+        input <- paste0(input, '# Freely estimate the variances of the indicators but constrain them to be equal:\n')
+        input <- paste0(input, paste0(pair_names_b, ' ~~ om*', pair_names_b, collapse = '\n'), '\n')
+        input <- paste0(input, 'omega := om\n\n')
+        if(om_positive){
+          input <- paste0(input, '\nom > 0\n\n')
+        } else {
+          input <- paste0(input, '\n')
+        }
+      }else{
+        if(om_positive){
+          input <- paste0(input, '# Freely estimate the variances of all indicators (positive):\n')
+          input <- paste0(input,
+                          paste0(pair_names_b, ' ~~ om', pair_names_b, '*', pair_names_b, collapse = '\n'),'\n',
+                          paste0('omega', pair_names_b, ' := om', pair_names_b, collapse = '\n'),'\n',
+                          paste0('om', pair_names_b, ' > 0', collapse = '\n'),'\n\n')
+        } else {
+          input <- paste0(input, '# Freely estimate the variances of all indicators (no input constraint):\n')
+          input <- paste0(input, paste0(pair_names_b, ' ~~ ', pair_names_b, collapse = '\n'), '\n\n')
+        }
+      }
+    }
+    
   
     # Part 2 (secondary factors)
     if(model!='simple'){
@@ -286,11 +319,6 @@ syntax.lavaan <- function(blocks,itf,model,rename_list=NULL){
         input <- paste0(input, inp_tmp1, '\n\n', inp_tmp2, '\n\n')
       }
     }
-    
-    
-    #if(standardized){
-    #  input <- paste0(input, '\n\nOUTPUT: STDYX;\n\n')
-    #}
   }
   
   # IRT model
@@ -332,9 +360,67 @@ syntax.lavaan <- function(blocks,itf,model,rename_list=NULL){
     }
     
     if(nrank==2){
-      input <- paste0(input, '# Fix uniquenesses of all indicators to 1:\n')
-      input <- paste0(input, paste0(pair_names_b,'~~1*',pair_names_b,collapse = '\n'), '\n')
-      if(length(gblocks)!=nblock){
+      if(transitive){
+        input <- paste0(input, '# Fix uniquenesses of all indicators to 2:\n')
+        input <- paste0(input, paste0(pair_names_b,'~~2*',pair_names_b,collapse = '\n'), '\n')
+      } else {
+        input <- paste0(input, '# Declare uniquenesses (reparameterized):\n')
+        input <- paste0(input,paste0(pair_names_b, '~~start(2) * e',pair_combn_b[,1], 'e', pair_combn_b[,2], '*',pair_names_b,collapse = '\n'),'\n')
+      }
+      
+      # Create Matrix Psi for irt models
+      input <- paste0(input, '\n\n# Define structured uniquenesses:\n')
+      Psi <- ifelse(row(diag(nitem))==col(diag(nitem)),paste0('e',1:nitem),0)
+      Psi <- ifelse(Psi==0,'',Psi) # neu
+      A_sign <- ifelse(A==0,0,ifelse(A==1,'+','-')) # alt
+      
+      
+      APsi <- matrix(NA, nrow=length(pair_names_b), ncol=nitem)
+      for(i in 1:nitem){
+        for(j in 1:length(pair_names_b)){
+          tmp <- paste0(A_sign[j,],Psi[,i])
+          tmp <- sub('^-$','',sub('^\\+$','',tmp))
+          tmp <- sub('^-0.*','',sub('^\\+0.*','',sub('^0.*','',tmp)))
+          APsi[j,i] <- paste0(tmp, collapse ='')
+        }
+      }
+      APsi <- sub('^\\+','',APsi)
+      
+      APsiA <- matrix(NA, nrow=length(pair_names_b), ncol=length(pair_names_b))
+      for(i in 1:length(pair_names_b)){
+        for(j in 1:length(pair_names_b)){
+          tmp <- paste0(A_sign[i,],APsi[j,])
+          #tmp <- sub('\\+','',sub('^0.*','',tmp))
+          tmp <- sub('^0.*','',tmp)
+          APsiA[j,i] <- paste0(tmp, collapse ='')
+        }
+      }
+      APsiA <- ifelse(APsiA=='+-','',ifelse(APsiA=='-+','',APsiA))
+      APsiA <- gsub('-\\+','',APsiA)
+      APsiA <- gsub('\\+-','-',APsiA)
+      APsiA <- gsub('--','+',APsiA)
+      
+      APsiA <- sub('-$','',APsiA)#
+      APsiA <- sub('\\+$','',APsiA)#
+      APsiA <- sub('^\\+','',APsiA)
+      
+      APsiA_under  <- sub('-e','e_',APsiA)
+      APsiA_sign <- ifelse(APsiA=='','',ifelse(substr(APsiA,1,1)=='-','-',''))
+      
+      # Structured uniquenesses in lavaan
+      APsiA_text <- matrix('', nrow=length(pair_names_b), ncol=length(pair_names_b))
+      for(i in 1:(nrow(APsiA)-1)){
+        for(j in (i+1):nrow(APsiA)){
+          APsiA_text[j,i] <- paste0(pair_names_b[i], "~~", APsiA_sign[j,i], "1*", pair_names_b[j])
+        }
+      }
+      APsiA_text <- ifelse(APsiA == '', '', APsiA_text)
+      APsiA_text <- paste0(ifelse(APsiA_text == '', '', paste0(APsiA_text, '\n')), collapse = '')
+      
+      input <- paste0(input, '\n# Define structured uniquenesses:\n', APsiA_text, '\n')
+      
+      
+      #if(length(gblocks)!=nblock){
         # Model constraints
         input <- paste0(input, '# Set model constraints for loadings:\n')
         #input <- paste0(input, '\n','MODEL CONSTRAINT:\nNEW\n')
@@ -359,10 +445,10 @@ syntax.lavaan <- function(blocks,itf,model,rename_list=NULL){
           }
         }
         
-        # Constraints
+        #Constraints
         conL <- rep('',nitem)
         for(i in 1:nitem){
-          if(paste0('L',i)%in%Lambda|paste0('L',i)%in%Add_param){
+          if(paste0('L',i)%in%Lambda){#|paste0('L',i)%in%Add_param){
             if(paste0('L_',i)%in%Lambda){
               conL[i] <- paste0('L_',i,' == ','- L',i)
             }
@@ -370,14 +456,8 @@ syntax.lavaan <- function(blocks,itf,model,rename_list=NULL){
             conL[i] <- paste0('L_',i,' == ','- L',i)
           }
         }
-        #pair_names_b_mat <- ifelse(Lambda=="","",pair_names_b)
-        
-        
-        #Add_param_tmp_pos <- paste0(Add_param,' := -',gsub('L','L_',Add_param), collapse = '\n')
-        #Add_param_tmp_neg <- paste0(gsub('L','L_',Add_param),' := -',Add_param, collapse = '\n')
         unidim_item_lavx <- ifelse(length(unidim_item)==0,'',paste0(unidim_item,' == ', sub('_','-',unidim_item),'\n',collapse = ''))
         conL <- paste0(ifelse(conL=='','',paste0(conL,'\n')), collapse = '')
-        
         
         tmp <- sub('_.*$','',unidim_item)
         tmp1 <- sub('^.*_','',unidim_item)
@@ -386,7 +466,6 @@ syntax.lavaan <- function(blocks,itf,model,rename_list=NULL){
         y <- c(paste0('L_',1:nitem)[which(paste0('L_',1:nitem)%in%Lambda)])
         y <- sub('_','',y)
         y <- y[which(y%in%AddL)]
-        
         
         mins <- c()
         for(i in 1:length(gblocks)){
@@ -407,19 +486,13 @@ syntax.lavaan <- function(blocks,itf,model,rename_list=NULL){
           conL_neg <- paste0(y,' := -',gsub('L','L_',y), collapse = '\n')
         }
         
-        
-        
         unidim_item_lav <- ''
         lknown <- length(known)
         if(lknown!=nitem){
-          
           x <- which(tmp%in%AddL|tmp1%in%AddL)
-          
-          
           tmp <- tmp[x]
           tmp1 <- tmp1[x]
           unidim_item_tmp <- unidim_item_tmp[x]
-          
           
           tmp2 <- which(!Add_param%in%known) #which(!Add_param%in%c(tmp1,paste0('L',mins)))
           
@@ -472,50 +545,73 @@ syntax.lavaan <- function(blocks,itf,model,rename_list=NULL){
         }
         
         if(length(tmp1)!=0&lknown!=nitem){
-          
           x <- AddL[which(!AddL%in%y)]
           x <- which(tmp1%in%x)
           
           tmp <- tmp[x]
           tmp1 <- tmp1[x]
           unidim_item_tmp <- unidim_item_tmp[x]
-          
           unidim_sign <- rep('-',length(tmp1))
           unidim_sign[b] <- '+'
-          
           unidim_item_lav <- paste0(tmp1,' := ', tmp, unidim_sign,unidim_item_tmp,'\n',collapse = '')
         }
         
         mins <- ifelse(length(mins)==0,'',paste0('\n L',mins,':=1', collapse = '\n'))
-        
-        #Add_param_pre <- paste0(paste0(Add_param,' =~ 0', collapse = '\n'),'\n')
-        #Add_param_post <- paste0(Add_param," ~ NA*1 + label('",Add_param,"')*1 +0?1", collapse = '\n')
-        #unidim_item <- ifelse(length(unidim_item)==0,'',paste0(unidim_item,' == ', sub('_','-',unidim_item),'\n',collapse = ''))
-        #conL <- paste0(ifelse(conL=='','',paste0(conL,'\n')), collapse = '')
-        
-        #input <- paste0(input,Add_param,'\n\n',unidim_item,'\n',conL,'\n\n')
-        
-        #input <- paste0(input,Add_param_pre,'\n\n',Add_param_post,'\n\n',unidim_item,'\n',conL,'\n\n')
-        
-        #if(unidim_item_lav==''){
-        #  input <- paste0(input,'\n\n',mins,'\n\n',conL_neg,'\n\n',unidim_item_lavx,'\n\n',
-        #                  conL,'\n\n')
-        #}else{
         input <- paste0(input,'\n\n',mins,'\n\n',conL_neg,'\n\n',unidim_item_lav,'\n',unidim_item_lavx,'\n\n',
                         '\n',conL,'\n\n')
-        #}
         
+        # if(!transitive){
+        #   lhs_all <- paste0('e', pair_combn_b[,1], 'e', pair_combn_b[,2])
+        # 
+        #   if(om_equal){
+        #     input <- paste0(input, '\n# Constrain all uniquenesses to be equal to 2 + omega:\n')
+        #     #input <- paste0(input, paste0(lhs_all[-1], ' == ', lhs_all[1], collapse = '\n'), '\n')
+        #     if(om_positive){
+        #       input <- paste0(input, 'om := sqrt(', lhs_all[1], ' - 2)\n\n')
+        #       input <- paste0(input, lhs_all[1], ' > 2\n')
+        # 
+        #     }else{
+        #       input <- paste0(input, 'om := ', lhs_all[1], ' - 2\n\n')
+        #     }
+        #     input <- paste0(input, paste0(lhs_all, ' == 2+ om*om', collapse = '\n'), '\n')
+        #   }else{
+        #     input <- paste0(input, '\n# Add pair-specific Omega terms to uniquenesses:\n')
+        #     if(om_positive){
+        #       input <- paste0(input, paste0(lhs_all, ' > 2', collapse = '\n'), '\n')
+        #       input <- paste0(input,paste0('om', lhs_all, ' := sqrt(', lhs_all, ' - 2)', collapse = '\n'),'\n\n')
+        #     }else{
+        #       input <- paste0(input,paste0('om', lhs_all, ' := ', lhs_all, ' - 2', collapse = '\n'),'\n\n')
+        #     }
+        #   }
+        # }
         
+        if(!transitive){
+          input <- paste0(input, '\n# Add Omega to diagonal uniquenesses:\n')
+          
+          lhs_all <- paste0('e', pair_combn_b[,1], 'e', pair_combn_b[,2])
+          rhs_all <- rep('2', length(lhs_all))
+          
+          if(om_equal){
+            anchor_lhs <- lhs_all[1]
+            anchor_rhs <- rhs_all[1]   # "2"
+            if(om_positive){
+              input <- paste0(input, anchor_lhs, ' > ', anchor_rhs, '\n')
+            }
+            if(length(lhs_all) > 1){
+              input <- paste0(input,paste0(lhs_all[-1], ' == ',anchor_lhs,
+                       collapse = '\n'),'\n')
+            }
+            input <- paste0(input, 'om := ', anchor_lhs, ' - (', anchor_rhs, ')\n')
+          }else {
+            if(om_positive){
+              input <- paste0(input,paste0(lhs_all, ' > ', rhs_all, collapse = '\n'),'\n')
+            }
+            input <- paste0(input,paste0('ome', pair_combn_b[,1], 'e', pair_combn_b[,2],' := ', lhs_all, ' - (', rhs_all, ')',
+                     collapse = '\n'),'\n')
+          }
+        }
         
-        #Add_param <- paste0(Add_param,' == -',gsub('L','L_',Add_param), collapse = '\n')
-        #unidim_item <- ifelse(length(unidim_item)==0,'',paste0(unidim_item,' == ', sub('_','-',unidim_item),'\n',collapse = ''))
-        #conL <- paste0(ifelse(conL=='','',paste0(conL,'\n')), collapse = '')
-        
-        
-        
-        #input <- paste0(input,unidim_item,'\n',Add_param,'\n',conL,'\n\n')
-        
-        
+
         # Fix one loading in each unidim block if this block is not connected with blocks of another factor or of already fixed blocks
         # This is not necessary but maybe more helpful for application. Fix the lowest item per block
         input <- paste0(input, '# Fix one loading per uni-dimensional grand block:\n')
@@ -527,7 +623,7 @@ syntax.lavaan <- function(blocks,itf,model,rename_list=NULL){
         
         input <- paste0(input,'\n')
       }
-    }
+    #}
     if(nrank>2){
       # Declare uniqunesses
       input <- paste0(input, '# Declare uniquenesses:\n')
@@ -620,16 +716,9 @@ syntax.lavaan <- function(blocks,itf,model,rename_list=NULL){
           conL[i] <- paste0('L_',i,' == ','- L',i)
         }
       }
-      
-      #pair_names_b_mat <- ifelse(Lambda=="","",pair_names_b)
-      
-      
-      #Add_param_tmp_pos <- paste0(Add_param,' := -',gsub('L','L_',Add_param), collapse = '\n')
-      #Add_param_tmp_neg <- paste0(gsub('L','L_',Add_param),' := -',Add_param, collapse = '\n')
       unidim_item_lavx <- ifelse(length(unidim_item)==0,'',paste0(unidim_item,' == ', sub('_','-',unidim_item),'\n',collapse = ''))
       conL <- paste0(ifelse(conL=='','',paste0(conL,'\n')), collapse = '')
 
-      
       tmp <- sub('_.*$','',unidim_item)
       tmp1 <- sub('^.*_','',unidim_item)
       unidim_item_tmp <- unidim_item
@@ -637,7 +726,6 @@ syntax.lavaan <- function(blocks,itf,model,rename_list=NULL){
       y <- c(paste0('L_',1:nitem)[which(paste0('L_',1:nitem)%in%Lambda)])
       y <- sub('_','',y)
       y <- y[which(y%in%AddL)]
-      
       
       mins <- c()
       for(i in 1:length(gblocks)){
@@ -658,19 +746,13 @@ syntax.lavaan <- function(blocks,itf,model,rename_list=NULL){
         conL_neg <- paste0(y,' := -',gsub('L','L_',y), collapse = '\n')
       }
       
-      
-      
       unidim_item_lav <- ''
       lknown <- length(known)
       if(lknown!=nitem){
-        
         x <- which(tmp%in%AddL|tmp1%in%AddL)
-        
-        
         tmp <- tmp[x]
         tmp1 <- tmp1[x]
         unidim_item_tmp <- unidim_item_tmp[x]
-        
         
         tmp2 <- which(!Add_param%in%known) #which(!Add_param%in%c(tmp1,paste0('L',mins)))
         
@@ -723,58 +805,22 @@ syntax.lavaan <- function(blocks,itf,model,rename_list=NULL){
       }
       
       if(length(tmp1)!=0&lknown!=nitem){
-        
         x <- AddL[which(!AddL%in%y)]
         x <- which(tmp1%in%x)
         
         tmp <- tmp[x]
         tmp1 <- tmp1[x]
         unidim_item_tmp <- unidim_item_tmp[x]
-        
         unidim_sign <- rep('-',length(tmp1))
         unidim_sign[b] <- '+'
-        
         unidim_item_lav <- paste0(tmp1,' := ', tmp, unidim_sign,unidim_item_tmp,'\n',collapse = '')
       }
       
       mins <- ifelse(length(mins)==0,'',paste0('\n L',mins,':=1', collapse = '\n'))
-      
-      #Add_param_pre <- paste0(paste0(Add_param,' =~ 0', collapse = '\n'),'\n')
-      #Add_param_post <- paste0(Add_param," ~ NA*1 + label('",Add_param,"')*1 +0?1", collapse = '\n')
-      #unidim_item <- ifelse(length(unidim_item)==0,'',paste0(unidim_item,' == ', sub('_','-',unidim_item),'\n',collapse = ''))
-      #conL <- paste0(ifelse(conL=='','',paste0(conL,'\n')), collapse = '')
-      
-      #input <- paste0(input,Add_param,'\n\n',unidim_item,'\n',conL,'\n\n')
-      
-      #input <- paste0(input,Add_param_pre,'\n\n',Add_param_post,'\n\n',unidim_item,'\n',conL,'\n\n')
-      
-      #if(unidim_item_lav==''){
-      #  input <- paste0(input,'\n\n',mins,'\n\n',conL_neg,'\n\n',unidim_item_lavx,'\n\n',
-      #                  conL,'\n\n')
-      #}else{
-        input <- paste0(input,'\n\n',mins,'\n\n',conL_neg,'\n\n',unidim_item_lav,'\n',unidim_item_lavx,'\n\n',
+      input <- paste0(input,'\n\n',mins,'\n\n',conL_neg,'\n\n',unidim_item_lav,'\n',unidim_item_lavx,'\n\n',
                         '\n',conL,'\n\n')
-      #}
       
 
-      
-      #Add_param <- paste0(Add_param,' == -',gsub('L','L_',Add_param), collapse = '\n')
-      #unidim_item <- ifelse(length(unidim_item)==0,'',paste0(unidim_item,' == ', sub('_','-',unidim_item),'\n',collapse = ''))
-      #conL <- paste0(ifelse(conL=='','',paste0(conL,'\n')), collapse = '')
-      
-
-      
-      #input <- paste0(input,unidim_item,'\n',Add_param,'\n',conL,'\n\n')
-      
-      
-      
-      
-      
-      
-      
-      
-      
-      
       # Fix one loading in each unidim block if this block is not connected with blocks of another factor or of already fixed blocks
       # This is not necessary but maybe more helpful for application. Fix the lowest item per block
       input <- paste0(input, '# Fix one loading per uni-dimensional grand block:\n')
@@ -799,29 +845,76 @@ syntax.lavaan <- function(blocks,itf,model,rename_list=NULL){
       input <- paste0(input,'\n')
       
       # Pair's uniqueness is equal to sum of two utility uniquenesses
-      input <- paste0(input, '# A pairs uniqueness is equal to the sum of the item uniquenesses:\n')
-      if(design=='full'){
-        input <- paste0(input,paste0('e',pair_combn[,1],'e',pair_combn[,2],' == e',pair_combn[,1],' + e',pair_combn[,2], collapse = '\n'),'\n\n')
-      }else if(design=='block'){
-        uniquenesses <- c()
-        for(i in 1:nrow(blocks)){
-          items <- blocks[i,]
-          whitems <- which(pair_combn_b[,1]%in%items&pair_combn_b[,2]%in%items)
-          tmp <- pair_combn_b[whitems,1][which(pair_combn_b[whitems,1]%in%pair_combn_b[whitems,2])]
-          
-          tmp <- paste0('e',pair_combn_b[whitems,1],'e',pair_combn_b[whitems,2],' == ' ,ifelse(pair_combn_b[whitems,1]%in%tmp,'-e_','e'),pair_combn_b[whitems,1],
-                        ifelse(pair_combn_b[whitems,2]%in%tmp,' - e_',' + e'),pair_combn_b[whitems,2])
-          tmp0 <- paste0('e',pair_combn_b[whitems,1],'e',pair_combn_b[whitems,2])
-          for(i in length(tmp0):1){
-            if(any(grepl(tmp0[i],uniquenesses))){
-              tmp <- tmp[-i]
+      if(transitive){
+        input <- paste0(input, '# A pairs uniqueness is equal to the sum of the item uniquenesses:\n')
+        if(design=='full'){
+          input <- paste0(input,paste0('e',pair_combn[,1],'e',pair_combn[,2],' == e',pair_combn[,1],' + e',pair_combn[,2], collapse = '\n'),'\n\n')
+        }else if(design=='block'){
+          uniquenesses <- c()
+          for(i in 1:nrow(blocks)){
+            items <- blocks[i,]
+            whitems <- which(pair_combn_b[,1]%in%items&pair_combn_b[,2]%in%items)
+            tmp <- pair_combn_b[whitems,1][which(pair_combn_b[whitems,1]%in%pair_combn_b[whitems,2])]
+            
+            tmp <- paste0('e',pair_combn_b[whitems,1],'e',pair_combn_b[whitems,2],' == ' ,ifelse(pair_combn_b[whitems,1]%in%tmp,'-e_','e'),pair_combn_b[whitems,1],
+                          ifelse(pair_combn_b[whitems,2]%in%tmp,' - e_',' + e'),pair_combn_b[whitems,2])
+            tmp0 <- paste0('e',pair_combn_b[whitems,1],'e',pair_combn_b[whitems,2])
+            for(i in length(tmp0):1){
+              if(any(grepl(tmp0[i],uniquenesses))){
+                tmp <- tmp[-i]
+              }
             }
+            uniquenesses <- c(uniquenesses,tmp)
+            ##sapply(paste0('e',pair_combn_b[whitems,1],'e',pair_combn_b[whitems,2]),function(x) grepl(x,uniquenesses))
           }
-          uniquenesses <- c(uniquenesses,tmp)
-          ##sapply(paste0('e',pair_combn_b[whitems,1],'e',pair_combn_b[whitems,2]),function(x) grepl(x,uniquenesses))
+          uniquenesses <- unique(uniquenesses[order(nchar(uniquenesses),uniquenesses)])
+          input <- paste0(input,paste0(uniquenesses, collapse = '\n'),'\n', collapse = '\n')
         }
-        uniquenesses <- unique(uniquenesses[order(nchar(uniquenesses),uniquenesses)])
-        input <- paste0(input,paste0(uniquenesses, collapse = '\n'),'\n', collapse = '\n')
+      }else{
+        if(design=='full'){
+          lhs_all <- paste0('e', pair_combn[,1], 'e', pair_combn[,2])
+          rhs_all <- paste0('e', pair_combn[,1], ' + e', pair_combn[,2])
+          
+          if(om_equal){
+            input <- paste0(input, '# Common Omega term across all pair variances:\n')
+            anchor_lhs <- lhs_all[1]; anchor_rhs <- rhs_all[1]
+            if(om_positive) input <- paste0(input, anchor_lhs, ' > ', anchor_rhs, '\n')
+            if(length(lhs_all) > 1) input <- paste0(input, paste0(lhs_all[-1], ' - (', rhs_all[-1], ') == ', anchor_lhs, ' - (', anchor_rhs, ')', collapse = '\n'), '\n')
+            input <- paste0(input, 'om := ', anchor_lhs, ' - (', anchor_rhs, ')\n\n')
+          }else{
+            input <- paste0(input, '# Pair-specific Omega terms:\n')
+            if(om_positive) input <- paste0(input, paste0(lhs_all, ' > ', rhs_all, collapse = '\n'), '\n')
+            input <- paste0(input, paste0('ome', pair_combn[,1], 'e', pair_combn[,2], ' := ', lhs_all, ' - (', rhs_all, ')', collapse = '\n'), '\n\n')
+          }
+        }else if(design=='block'){
+          lhs_all <- c(); rhs_all <- c()
+          
+          for(i in 1:nrow(blocks)){
+            items <- blocks[i,]
+            whitems <- which(pair_combn_b[,1] %in% items & pair_combn_b[,2] %in% items)
+            neg_items <- pair_combn_b[whitems,1][which(pair_combn_b[whitems,1] %in% pair_combn_b[whitems,2])]
+            lhs <- paste0('e', pair_combn_b[whitems,1], 'e', pair_combn_b[whitems,2])
+            rhs <- paste0(ifelse(pair_combn_b[whitems,1] %in% neg_items, '-e_', 'e'), pair_combn_b[whitems,1], ifelse(pair_combn_b[whitems,2] %in% neg_items, ' - e_', ' + e'), pair_combn_b[whitems,2])
+            keep <- rep(TRUE, length(lhs))
+            for(j in length(lhs):1){ if(any(grepl(lhs[j], lhs_all))) keep[j] <- FALSE }
+            lhs_all <- c(lhs_all, lhs[keep]); rhs_all <- c(rhs_all, rhs[keep])
+          }
+          
+          ord <- order(nchar(lhs_all), lhs_all)
+          lhs_all <- lhs_all[ord]; rhs_all <- rhs_all[ord]
+          
+          if(om_equal){
+            input <- paste0(input, '# Common Omega term across all pair variances:\n')
+            anchor_lhs <- lhs_all[1]; anchor_rhs <- rhs_all[1]
+            if(om_positive) input <- paste0(input, anchor_lhs, ' > ', anchor_rhs, '\n')
+            if(length(lhs_all) > 1) input <- paste0(input, paste0(lhs_all[-1], ' - (', rhs_all[-1], ') == ', anchor_lhs, ' - (', anchor_rhs, ')', collapse = '\n'), '\n')
+            input <- paste0(input, 'om := ', anchor_lhs, ' - (', anchor_rhs, ')\n\n')
+          }else{
+            input <- paste0(input, '# Pair-specific Omega terms:\n')
+            if(om_positive) input <- paste0(input, paste0(lhs_all, ' > ', rhs_all, collapse = '\n'), '\n')
+            input <- paste0(input, paste0('ome', sub('^e','', lhs_all), ' := ', lhs_all, ' - (', rhs_all, ')', collapse = '\n'), '\n\n')
+          }
+        }
       }
 
       # This is not necessary but maybe more helpful for application. Fix the lowest item per block

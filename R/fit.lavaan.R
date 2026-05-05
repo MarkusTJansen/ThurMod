@@ -20,6 +20,12 @@
 #' and respondents as rows.
 #' @param estimator Which estimator should be used? All estimators that are
 #' available in `lavaan` can be used. Defaults to `'ULSMV'`.
+#' @param transitive Logical. Are the data considered to be transitive?
+#' Defaults to `TRUE`.
+#' @param om_equal Logical. Are diagonal elements omega of Psi, the covariance matrix of 
+#' latent uncorrelated and unbiased error terms, equal? Defaults to `FALSE`.
+#' @param om_positive Logical. Are diagonal elements omega of Psi, the covariance matrix of 
+#' latent uncorrelated and unbiased error terms, strictly positve? Defaults to `FALSE`.
 #' @param rename_list A list with two vectors to rename the objects in the syntax.
 #' Vector one is the original names, vector two the new names. Defaults to `NULL`.
 #' 
@@ -69,7 +75,7 @@
 #'     
 #' @export
 
-fit.lavaan <- function(blocks,itf,model,data=NULL,estimator='ULSMV',rename_list=NULL){
+fit.lavaan <- function(blocks,itf,model,data=NULL,estimator='ULSMV',transitive=TRUE,om_equal=FALSE,om_positive=FALSE,rename_list=NULL){
   
   if(!is.matrix(blocks)&!is.vector(blocks)){
     stop('Blocks must be given as a matrix. Only for full designs a vector is possible.')
@@ -79,7 +85,7 @@ fit.lavaan <- function(blocks,itf,model,data=NULL,estimator='ULSMV',rename_list=
   }
   design <- ifelse(dim(blocks)[1]==1,'full','block')
   
-  modelsyn <- syntax.lavaan(blocks,itf,model,rename_list)
+  modelsyn <- syntax.lavaan(blocks,itf,model,transitive,om_equal,om_positive,rename_list)
   
   if(model=='irt'){
     results <- lavaan::lavaan(modelsyn, data = data, ordered = T, 

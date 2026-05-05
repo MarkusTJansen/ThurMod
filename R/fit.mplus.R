@@ -30,6 +30,12 @@
 #' available in Mplus can be used. Defaults to `'ULSMV'`.
 #' @param data_full Logical. Are the data considered to be from a full design?
 #' Defaults to `FALSE`.
+#' @param transitive Logical. Are the data considered to be transitive?
+#' Defaults to `TRUE`.
+#' @param om_equal Logical. Are diagonal elements omega of Psi, the covariance matrix of 
+#' latent uncorrelated and unbiased error terms, equal? Defaults to `FALSE`.
+#' @param om_positive Logical. Are diagonal elements omega of Psi, the covariance matrix of 
+#' latent uncorrelated and unbiased error terms, strictly positve? Defaults to `FALSE`.
 #' @param standardized Logical. Should standardized values be computed? Defaults
 #' to `TRUE`.
 #' @param rename_list A list with two vectors to rename the objects in the syntax.
@@ -92,7 +98,8 @@
 
 
 fit.mplus <- function(blocks,itf,model,input_path,output_path=NULL,data_path='myDataFile.dat',fscore_path='myFactorScores.dat',title='myFC_model',
-                      ID=FALSE, byblock=TRUE,estimator='ULSMV',data_full=FALSE,standardized=TRUE,rename_list=NULL,...){
+                      ID=FALSE, byblock=TRUE,estimator='ULSMV',data_full=FALSE,transitive=TRUE,om_equal=FALSE,om_positive=FALSE,
+                      standardized=TRUE,rename_list=NULL,...){
   if(is.null(input_path)){
     stop('You need to specify a Mplus input file in object input_path.')
   }
@@ -109,7 +116,7 @@ fit.mplus <- function(blocks,itf,model,input_path,output_path=NULL,data_path='my
   design <- ifelse(dim(blocks)[1]==1,'full','block')
   
   syntax.mplus(blocks,itf,model,input_path,data_path,fscore_path,title,
-               ID,byblock,estimator,data_full,standardized,rename_list)
+               ID,byblock,estimator,data_full,transitive,om_equal,om_positive,standardized,rename_list)
   
   path <- paste0('mplus ',input_path)
   

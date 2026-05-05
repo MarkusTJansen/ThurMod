@@ -28,6 +28,12 @@
 #' available in Mplus can be used. Defaults to `'ULSMV'`.
 #' @param data_full Logical. Are the data considered to be from a full design?
 #' Defaults to `FALSE`.
+#' @param transitive Logical. Are the data considered to be transitive?
+#' Defaults to `TRUE`.
+#' @param om_equal Logical. Are diagonal elements omega of Psi, the covariance matrix of 
+#' latent uncorrelated and unbiased error terms, equal? Defaults to `FALSE`.
+#' @param om_positive Logical. Are diagonal elements omega of Psi, the covariance matrix of 
+#' latent uncorrelated and unbiased error terms, strictly positve? Defaults to `FALSE`.
 #' @param standardized Logical. Should standardized values be computed? Defaults
 #' to `TRUE`.
 #' @param rename_list A list with two vectors to rename the objects in the syntax.
@@ -89,7 +95,8 @@
 #' @export
 
 syntax.mplus <- function(blocks,itf,model,input_path='myFC_model.inp',data_path='myDataFile.dat',fscore_path='myFactorScores.dat',title='myFC_model',
-                         ID=FALSE, byblock=TRUE,estimator='ULSMV',data_full=FALSE,standardized=TRUE,rename_list=NULL){
+                         ID=FALSE, byblock=TRUE,estimator='ULSMV',data_full=FALSE,transitive=TRUE,om_equal=FALSE,om_positive=FALSE,
+                         standardized=TRUE,rename_list=NULL){
   if(is.null(input_path)){
     stop('You need to specify a Mplus input file in object input_path.')
   }
@@ -163,6 +170,7 @@ syntax.mplus <- function(blocks,itf,model,input_path='myFC_model.inp',data_path=
   
   # write mplus input file
   # TITLE
+  inputadd <- ''
   input <- paste0('TITLE: ',title, '\n\n')
   
   # DATA
@@ -241,9 +249,32 @@ syntax.mplus <- function(blocks,itf,model,input_path='myFC_model.inp',data_path=
     input <- paste0(input, paste(At_text, collapse='\n'), '\n\n')
     
     # For rankings: Fix variances of indicators to 0
-    input <- paste0(input, '! Fix the variances of all indicators to 0:\n')
-    input <- paste0(input, pair_names_b[1],'-',pair_names_b[length(pair_names_b)],'@0',';\n\n')
-    #### Whats with paired comparisons?
+    if(transitive){
+      input <- paste0(input, '! Fix the variances of all indicators to 0:\n')
+      input <- paste0(input, pair_names_b[1],'-',pair_names_b[length(pair_names_b)],'@0',';\n\n')
+    } else{#### Whats with paired comparisons?
+      if(om_equal){
+        if(om_positive){
+          input <- paste0(input, '! Freely estimate the variances of the indicators but constrain them to be equal and positive:\n')
+          input <- paste0(input, pair_names_b[1],'-',pair_names_b[length(pair_names_b)],' (om)',';\n\n')
+          inputadd <- paste0('\n','MODEL CONSTRAINT:\nNEW(omega);\nom = omega*omega;\n\n')
+        }else{
+          input <- paste0(input, '! Freely estimate the variances of the indicators but constrain them to be equal:\n')
+          input <- paste0(input, pair_names_b[1],'-',pair_names_b[length(pair_names_b)],' (om)',';\n\n')
+        }
+      }else{
+        if(om_positive){
+          input <- paste0(input, '! Freely estimate the variances of all indicators (no input constrain, but positive):\n')
+          input <- paste0(input,paste0(pair_names_b, " (om", pair_names_b, ");", collapse = "\n"),"\n\n")
+          inputadd <- paste0('\n','MODEL CONSTRAINT:\nNEW\n',paste0('omega', pair_names_b,collapse='\n'),';\n\n',
+                             paste0('om',pair_names_b,' = ','omega',pair_names_b,
+                                    '*omega',pair_names_b,';', collapse = '\n'))
+        }else{
+          input <- paste0(input, '! Freely estimate the variances of all indicators (no input constrain):\n')
+          input <- paste0(input, pair_names_b[1],'-',pair_names_b[length(pair_names_b)],';\n\n')
+        }
+      }
+    }
     
     # Part 2 (secondary factors)
     if(model!='simple'){
@@ -368,6 +399,8 @@ syntax.mplus <- function(blocks,itf,model,input_path='myFC_model.inp',data_path=
       }
     }
     
+    input <- paste0(input,'\n\n',inputadd)
+    
     if(standardized){
       input <- paste0(input, '\n\nOUTPUT: STDYX;\n\n')
     }
@@ -410,8 +443,13 @@ syntax.mplus <- function(blocks,itf,model,input_path='myFC_model.inp',data_path=
     }
     
     if(nrank==2){
-      input <- paste0(input, '! Fix uniquenesses of all indicators to 1:\n')
-      input <- paste0(input, paste(pair_names_b,collapse = '@2;\n'), '@2;\n')
+      if(transitive){
+        input <- paste0(input, '! Fix uniquenesses of all indicators to 1:\n')
+        input <- paste0(input, paste(pair_names_b, collapse='@2;\n'), '@2;\n')
+      } else {
+        input <- paste0(input, '! Declare uniquenesses of all indicators:\n')
+        input <- paste0(input,paste0(pair_names_b, '*2 (e',pair_combn_b[,1], 'e', pair_combn_b[,2], ');',collapse = '\n'),'\n')
+      }
       
       # Create Matrix Psi for irt models
       input <- paste0(input, '\n\n! Define structured uniquenesses:\n')
@@ -445,15 +483,12 @@ syntax.mplus <- function(blocks,itf,model,input_path='myFC_model.inp',data_path=
       APsiA <- gsub('\\+-','-',APsiA)
       APsiA <- gsub('--','+',APsiA)
       
-      
       APsiA <- sub('-$','',APsiA)#
       APsiA <- sub('\\+$','',APsiA)#
       APsiA <- sub('^\\+','',APsiA)
       
-      
       APsiA_under  <- sub('-e','e_',APsiA)
       APsiA_sign <- ifelse(APsiA=='','',ifelse(substr(APsiA,1,1)=='-','-',''))
-      
       
       # Correlations in Psi
       APsiA_text <- matrix('', nrow=length(pair_names_b), ncol=length(pair_names_b))
@@ -467,9 +502,13 @@ syntax.mplus <- function(blocks,itf,model,input_path='myFC_model.inp',data_path=
       
       input <- paste0(input,'\n\n',APsiA_text,'\n\n')
       
-      if(length(gblocks)!=nblock){
+      #if(length(gblocks)!=nblock){
         # Model constraints
         input <- paste0(input, '! Set model constraints for loadings:\n')
+        if(!transitive){
+          input <- paste0(input, ' !and uniquenesses')
+        }
+        input <- paste0(input, '\n')
         input <- paste0(input, '\n','MODEL CONSTRAINT:\nNEW\n')
         
         # Define new parameters
@@ -492,6 +531,7 @@ syntax.mplus <- function(blocks,itf,model,input_path='myFC_model.inp',data_path=
           }
         }
         
+        
         # Constraints
         conL <- rep('',nitem)
         for(i in 1:nitem){
@@ -504,11 +544,40 @@ syntax.mplus <- function(blocks,itf,model,input_path='myFC_model.inp',data_path=
           }
         }
         
+        if(!transitive){
+          if(om_equal){
+            Add_param <- c(Add_param,'om')
+          }else{
+            Add_param <- c(Add_param,paste0('om', paste0('e', pair_combn_b[,1], 'e', pair_combn_b[,2])))
+          }
+        }
+        
         Add_param <- paste0(paste0(Add_param, collapse = '\n'),';')
         unidim_item <- ifelse(length(unidim_item)==0,'',paste0(unidim_item,' = ', sub('_','-',unidim_item),';\n',collapse = ''))
         conL <- paste0(ifelse(conL=='','',paste0(conL,';\n')), collapse = '')
         
         input <- paste0(input,Add_param,'\n\n',unidim_item,'\n',conL,'\n\n')
+        
+        if(!transitive){
+          input <- paste0(input, '\n! Add Omega to diagonal uniquenesses:\n')
+          if(om_equal){
+            if(om_positive){
+              input <- paste0(input,paste0('e', pair_combn_b[,1], 'e', pair_combn_b[,2],' = 2 + om*om;',collapse = '\n'),'\n')
+            } else {
+              input <- paste0(input,paste0('e', pair_combn_b[,1], 'e', pair_combn_b[,2],' = 2 + om;',collapse = '\n'),'\n')
+            }
+          } else {
+            if(om_positive){
+              input <- paste0(input,paste0('e', pair_combn_b[,1], 'e', pair_combn_b[,2],' = 2 + ome', pair_combn_b[,1], 'e', pair_combn_b[,2],
+                                           '*ome', pair_combn_b[,1], 'e', pair_combn_b[,2], ';',collapse = '\n'),'\n')
+            } else {
+              input <- paste0(input,paste0('e', pair_combn_b[,1], 'e', pair_combn_b[,2],' = 2 + ome', pair_combn_b[,1], 'e', pair_combn_b[,2], 
+                                           ';',collapse = '\n'),'\n')
+            }
+          }
+        }
+
+        input <- paste0(input, '\n')
         
         # Fix one loading in each unidim block if this block is not connected with blocks of another factor or of already fixed blocks
         # This is not necessary but maybe more helpful for application. Fix the lowest item per block
@@ -521,7 +590,7 @@ syntax.mplus <- function(blocks,itf,model,input_path='myFC_model.inp',data_path=
         
         input <- paste0(input,'\n')
       }
-    }
+    #}
     if(nrank>2){
       # Declare uniqunesses
       input <- paste0(input, '! Declare uniquenesses:\n')
@@ -618,6 +687,34 @@ syntax.mplus <- function(blocks,itf,model,input_path='myFC_model.inp',data_path=
         }
       }
       
+      if(transitive){
+        
+      }else{
+        if(om_equal){
+          Add_param <- c(Add_param,'om')
+        }else{
+          if(design=='full'){
+            Add_param <- c(Add_param,paste0('om','e',pair_combn[,1],'e',pair_combn[,2])) # full
+          }else if(design=='block'){
+            uniquenesses <- c()
+            for(i in 1:nrow(blocks)){
+              items <- blocks[i,]
+              whitems <- which(pair_combn_b[,1]%in%items&pair_combn_b[,2]%in%items)
+              tmp <- pair_combn_b[whitems,1][which(pair_combn_b[whitems,1]%in%pair_combn_b[whitems,2])]
+              
+              tmp <- paste0('ome',pair_combn_b[whitems,1],'e',pair_combn_b[whitems,2])
+              tmp0 <- paste0('ome',pair_combn_b[whitems,1],'e',pair_combn_b[whitems,2])
+              for(j in length(tmp0):1){
+                if(any(grepl(tmp0[j],uniquenesses))){
+                  tmp <- tmp[-j]
+                }
+              }
+              Add_param <- c(Add_param,tmp)
+            }
+          }
+        }
+      }
+      
       Add_param <- paste0(paste0(Add_param, collapse = '\n'),';')
       unidim_item <- ifelse(length(unidim_item)==0,'',paste0(unidim_item,' = ', sub('_','-',unidim_item),';\n',collapse = ''))
       conL <- paste0(ifelse(conL=='','',paste0(conL,';\n')), collapse = '')
@@ -649,31 +746,101 @@ syntax.mplus <- function(blocks,itf,model,input_path='myFC_model.inp',data_path=
       input <- paste0(input,'\n')
       
       # Pair's uniqueness is equal to sum of two utility uniquenesses
-      input <- paste0(input, '! A pairs uniqueness is equal to the sum of the items uniquenesses:\n')
-      if(design=='full'){
-        input <- paste0(input,paste0('e',pair_combn[,1],'e',pair_combn[,2],' = e',pair_combn[,1],' + e',pair_combn[,2],';', collapse = '\n'),'\n\n')
-      }else if(design=='block'){
-        uniquenesses <- c()
-        for(i in 1:nrow(blocks)){
-          items <- blocks[i,]
-          whitems <- which(pair_combn_b[,1]%in%items&pair_combn_b[,2]%in%items)
-          tmp <- pair_combn_b[whitems,1][which(pair_combn_b[whitems,1]%in%pair_combn_b[whitems,2])]
-          
-          tmp <- paste0('e',pair_combn_b[whitems,1],'e',pair_combn_b[whitems,2],' = ' ,ifelse(pair_combn_b[whitems,1]%in%tmp,'-e_','e'),pair_combn_b[whitems,1],
-                        ifelse(pair_combn_b[whitems,2]%in%tmp,' - e_',' + e'),pair_combn_b[whitems,2],';')
-          tmp0 <- paste0('e',pair_combn_b[whitems,1],'e',pair_combn_b[whitems,2])
-          for(i in length(tmp0):1){
-            if(any(grepl(tmp0[i],uniquenesses))){
-              tmp <- tmp[-i]
+      if(transitive){
+        input <- paste0(input, '! A pairs uniqueness is equal to the sum of the items uniquenesses:\n')
+        if(design=='full'){
+          input <- paste0(input,paste0('e',pair_combn[,1],'e',pair_combn[,2],' = e',pair_combn[,1],' + e',pair_combn[,2],';', collapse = '\n'),'\n\n')
+        }else if(design=='block'){
+          uniquenesses <- c()
+          for(i in 1:nrow(blocks)){
+            items <- blocks[i,]
+            whitems <- which(pair_combn_b[,1]%in%items&pair_combn_b[,2]%in%items)
+            tmp <- pair_combn_b[whitems,1][which(pair_combn_b[whitems,1]%in%pair_combn_b[whitems,2])]
+            
+            tmp <- paste0('e',pair_combn_b[whitems,1],'e',pair_combn_b[whitems,2],' = ' ,ifelse(pair_combn_b[whitems,1]%in%tmp,'-e_','e'),pair_combn_b[whitems,1],
+                          ifelse(pair_combn_b[whitems,2]%in%tmp,' - e_',' + e'),pair_combn_b[whitems,2],';')
+            tmp0 <- paste0('e',pair_combn_b[whitems,1],'e',pair_combn_b[whitems,2])
+            for(j in length(tmp0):1){
+              if(any(grepl(tmp0[j],uniquenesses))){
+                tmp <- tmp[-j]
+              }
+            }
+            uniquenesses <- c(uniquenesses,tmp)
+          }
+          uniquenesses <- unique(uniquenesses[order(nchar(uniquenesses),uniquenesses)])
+          input <- paste0(input,paste0(uniquenesses, collapse = '\n'),'\n', collapse = '\n')
+        }
+      }else{
+        if(design=='full'){
+          if(om_equal){
+            if(om_positive){
+              input <- paste0(input, '! Freely estimate the variances of the indicators but constrain them to be equal and positive:\n')
+              input <- paste0(input,paste0('e',pair_combn[,1],'e',pair_combn[,2],' = e',pair_combn[,1],' + e',pair_combn[,2],' + om*om;',
+                                           collapse = '\n'),'\n\n')
+            }else{
+              input <- paste0(input, '! Freely estimate the variances of the indicators but constrain them to be equal:\n')
+              input <- paste0(input,paste0('e',pair_combn[,1],'e',pair_combn[,2],' = e',pair_combn[,1],' + e',pair_combn[,2],' + om;',
+                                     collapse = '\n'),'\n\n')
+            }
+          }else{
+            if(om_positive){
+              input <- paste0(input, '! Freely estimate the variances of all indicators (pair-specific positive omega):\n')
+              input <- paste0(input,paste0('e',pair_combn[,1],'e',pair_combn[,2],' = e',pair_combn[,1],' + e',pair_combn[,2],
+                                           ' + ome',pair_combn[,1],'e',pair_combn[,2],'*ome',pair_combn[,1],'e',pair_combn[,2],';',
+                                           collapse = '\n'),'\n\n')
+            }else{
+              input <- paste0(input, '! Freely estimate the variances of all indicators (pair-specific omega):\n')
+              input <- paste0(input,paste0('e',pair_combn[,1],'e',pair_combn[,2],' = e',pair_combn[,1],' + e',pair_combn[,2],
+                                     ' + ome',pair_combn[,1],'e',pair_combn[,2],';',
+                                     collapse = '\n'),'\n\n')
             }
           }
-          uniquenesses <- c(uniquenesses,tmp)
-          ##sapply(paste0('e',pair_combn_b[whitems,1],'e',pair_combn_b[whitems,2]),function(x) grepl(x,uniquenesses))
+        }else if(design=='block'){
+          uniquenesses <- c()
+          for(i in 1:nrow(blocks)){
+            items <- blocks[i,]
+            whitems <- which(pair_combn_b[,1] %in% items & pair_combn_b[,2] %in% items)
+            tmp <- pair_combn_b[whitems,1][which(pair_combn_b[whitems,1] %in% pair_combn_b[whitems,2])]
+            
+            if(om_equal){
+              if(om_positive){
+                tmp <- paste0('e',pair_combn_b[whitems,1],'e',pair_combn_b[whitems,2],' = ',
+                              ifelse(pair_combn_b[whitems,1] %in% tmp,'-e_','e'),pair_combn_b[whitems,1],
+                              ifelse(pair_combn_b[whitems,2] %in% tmp,' - e_',' + e'),pair_combn_b[whitems,2],
+                              ' + om*om;')
+              } else {
+                tmp <- paste0('e',pair_combn_b[whitems,1],'e',pair_combn_b[whitems,2],' = ',
+                              ifelse(pair_combn_b[whitems,1] %in% tmp,'-e_','e'),pair_combn_b[whitems,1],
+                              ifelse(pair_combn_b[whitems,2] %in% tmp,' - e_',' + e'),pair_combn_b[whitems,2],
+                              ' + om;')
+              }
+            }else {
+              if(om_positive){
+                tmp <- paste0('e',pair_combn_b[whitems,1],'e',pair_combn_b[whitems,2],' = ',
+                              ifelse(pair_combn_b[whitems,1] %in% tmp,'-e_','e'),pair_combn_b[whitems,1],
+                              ifelse(pair_combn_b[whitems,2] %in% tmp,' - e_',' + e'),pair_combn_b[whitems,2],
+                              ' + ome',pair_combn_b[whitems,1],'e',pair_combn_b[whitems,2],'*ome',pair_combn_b[whitems,1],'e',pair_combn_b[whitems,2],';')
+              } else {
+                tmp <- paste0('e',pair_combn_b[whitems,1],'e',pair_combn_b[whitems,2],' = ',
+                              ifelse(pair_combn_b[whitems,1] %in% tmp,'-e_','e'),pair_combn_b[whitems,1],
+                              ifelse(pair_combn_b[whitems,2] %in% tmp,' - e_',' + e'),pair_combn_b[whitems,2],
+                              ' + ome',pair_combn_b[whitems,1],'e',pair_combn_b[whitems,2],';')
+              }
+            }
+            tmp0 <- paste0('e',pair_combn_b[whitems,1],'e',pair_combn_b[whitems,2])
+            for(j in length(tmp0):1){
+              if(any(grepl(tmp0[j],uniquenesses))){
+                tmp <- tmp[-j]
+              }
+            }
+            uniquenesses <- c(uniquenesses,tmp)
+            ##sapply(paste0('e',pair_combn_b[whitems,1],'e',pair_combn_b[whitems,2]),function(x) grepl(x,uniquenesses))
+          }
+          uniquenesses <- unique(uniquenesses[order(nchar(uniquenesses),uniquenesses)])
+          input <- paste0(input,paste0(uniquenesses, collapse = '\n'),'\n', collapse = '\n')
         }
-        uniquenesses <- unique(uniquenesses[order(nchar(uniquenesses),uniquenesses)])
-        input <- paste0(input,paste0(uniquenesses, collapse = '\n'),'\n', collapse = '\n')
       }
-
+      
       # This is not necessary but maybe more helpful for application. Fix the lowest item per block
       for(i in 1:length(gblocks)){
         tmp2 <- min(gblocks[[i]])
